@@ -98,7 +98,8 @@ class CommBox(QFrame):
         self.hide_title = hide_title
         self.setFrameShape(QFrame.Shape.NoFrame)
 
-        if is_bell or not show_btn:
+        # ---- FIX: make whole card clickable whenever there is a callback ----
+        if is_bell or not show_btn or callback:
             self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.setStyleSheet("QFrame { border: none; border-radius: 20px; background-color: white; }")
@@ -227,6 +228,9 @@ class CommBox(QFrame):
             self.btn.setFixedHeight(45)
             self.btn.setStyleSheet(
                 "QPushButton { background-color: #4D908E; color: white; border-radius: 12px; font-weight: bold; border: none; }")
+            # Button click still works but we don't need it to fire separately
+            # since the whole card is now clickable via mousePressEvent.
+            # We keep it connected so it still works if tapped directly.
             self.btn.clicked.connect(self.handle_click)
             bottom_layout.addWidget(self.btn)
 
@@ -251,7 +255,9 @@ class CommBox(QFrame):
                 f"background-color: {self.original_color}; border-radius: 20px; border: none;"))
             if self.callback:
                 self.callback("BELL")
+
         elif not self.show_btn:
+            # Bathroom-style cards (no button, picture cards)
             if self.hide_title and self.use_picture and hasattr(self, 'pic_frame'):
                 safe_path = self.media_file.replace('\\', '/')
                 self.pic_frame.setStyleSheet(
@@ -265,6 +271,15 @@ class CommBox(QFrame):
             QTimer.singleShot(150, self.restore_colors)
             if self.callback:
                 self.callback(self.title)
+
+        elif self.show_btn and self.callback:
+            # ---- FIX: whole-card click for the 8 main menu cards ----
+            self.top_half.setStyleSheet(
+                "background-color: #BDBDBD; border-top-left-radius: 20px; border-top-right-radius: 20px; border: none;")
+            self.bottom_half.setStyleSheet(
+                "background-color: #E0E0E0; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; border: none;")
+            QTimer.singleShot(150, self.restore_colors)
+            self.callback(self.title)
 
     def restore_colors(self):
         if self.hide_title and self.use_picture and hasattr(self, 'pic_frame'):
@@ -298,15 +313,10 @@ class CommBox(QFrame):
 # PAGE 11: FULL SCREEN ITEM PAGE
 # ==========================================
 class FullScreenItemPage(QFrame):
-    """
-    Displays any selected item full-screen with its picture (or emoji fallback)
-    and the item name — exactly like the YES/NO confirmation screen.
-    back_index tells it which stack page to return to.
-    """
     def __init__(self, app):
         super().__init__()
         self.app = app
-        self._back_index = 1          # default: go back to main menu
+        self._back_index = 1
         self._image_prefix = ""
         self._item_index = 0
         self._item_name = ""
@@ -318,14 +328,12 @@ class FullScreenItemPage(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # ---- Image area (fills most of screen) ----
         self.image_label = QLabel()
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.image_label.setStyleSheet("background: transparent; border: none;")
         layout.addWidget(self.image_label, stretch=7)
 
-        # ---- Bottom bar: name + SELECT button + back ----
         self.bottom_bar = QFrame()
         self.bottom_bar.setFixedHeight(140)
         self.bottom_bar.setStyleSheet(
@@ -364,9 +372,6 @@ class FullScreenItemPage(QFrame):
 
         layout.addWidget(self.bottom_bar, stretch=0)
 
-    # ------------------------------------------------------------------
-    # Public API – called before switching to this page
-    # ------------------------------------------------------------------
     def show_item(self, item_name, item_index, image_prefix, bg_fallback, emoji_fallback, back_index):
         self._back_index = back_index
         self._image_prefix = image_prefix
@@ -379,7 +384,6 @@ class FullScreenItemPage(QFrame):
 
         image_path = f"assets/{image_prefix}_{item_index}.png"
         if os.path.exists(image_path):
-            # Fill the image area nicely
             pixmap = QPixmap(image_path)
             screen_w = self.app.width()
             screen_h = self.app.height() - self.bottom_bar.height()
@@ -390,7 +394,6 @@ class FullScreenItemPage(QFrame):
             y_off = (scaled.height() - screen_h) // 4
             cropped = scaled.copy(x_off, y_off, screen_w, screen_h)
 
-            # Rounded corners
             rounded = QPixmap(cropped.size())
             rounded.fill(Qt.GlobalColor.transparent)
             painter = QPainter(rounded)
@@ -407,7 +410,6 @@ class FullScreenItemPage(QFrame):
             self.setStyleSheet("background-color: #1a1a1a;")
             self.image_label.setStyleSheet("background: transparent; border: none;")
         else:
-            # Emoji / text fallback
             self.image_label.setPixmap(QPixmap())
             self.image_label.setText(emoji_fallback)
             self.image_label.setFont(QFont("Arial", 120))
@@ -419,7 +421,6 @@ class FullScreenItemPage(QFrame):
         self.app.stack.setCurrentIndex(self._back_index)
 
     def _confirm_selection(self):
-        # Flash green then go back
         self.bottom_bar.setStyleSheet(
             "background-color: #D5F5E3; border-radius: 0px; border: none;")
         QTimer.singleShot(400, lambda: self.app.stack.setCurrentIndex(self._back_index))
@@ -463,7 +464,6 @@ class WelcomePage(QFrame):
         main.addWidget(self.greeting_frame)
         main.addSpacing(10)
 
-        # --- STATUS SECTION (ALARM & TIMER) ---
         self.status_container = QFrame()
         self.status_container.setStyleSheet("background: transparent; border: none;")
         status_v_layout = QVBoxLayout(self.status_container)
@@ -958,12 +958,12 @@ def update_big_screen_shared(page, index):
 
 
 def open_fullscreen_for_page(page, idx, back_page_index):
-    """Helper: push the full-screen item page for any big-screen page."""
     emoji_map = {
         "food":          "🍽️",
         "feeling":       "😊",
         "entertainment": "📺",
         "recommend":     "💡",
+        "position":      "💪",
     }
     emoji = emoji_map.get(page._image_prefix, "✨")
     page.app.fullscreen_item_page.show_item(
@@ -985,39 +985,39 @@ class FoodPage(BasePage):
         super().__init__(app, "FOOD MENU")
         self.menu_items = [
             "Pad Kra Pao (Basil Stir-Fry)",
-    "Gai Pad Med Mamuang (Cashew Chicken)",
-    "Pad Kana Moo Krob (Crispy Pork Belly with Chinese Broccoli)",
-    "Pad Prik King (Dry Red Curry Stir-Fry)",
-    "Pad Pak Ruam (Mixed Vegetable Stir-Fry)",
-    "Moo Ping (Grilled Pork Skewers)",
-    "Tod Mun Pla (Thai Fish Cakes)",
-    "Gaeng Keow Wan (Green Curry)",
-    "Gaeng Daeng (Red Curry)",
-    "Gaeng Massaman (Massaman Curry)",
-    "Gaeng Panang (Panang Curry)",
-    "Gaeng Som (Sour Curry)",
-    "Gaeng Phed Ped Yang (Roast Duck Red Curry)",
-    "Pad Thai",
-    "Pad See Ew (Stir-Fried Wide Noodles)",
-    "Pad Kee Mao (Drunken Noodles)",
-    "Khao Pad (Thai Fried Rice)",
-    "Khao Pad Sapparod (Pineapple Fried Rice)",
-    "Khao Man Gai (Hainanese Chicken Rice)",
-    "Khao Kha Moo (Braised Pork Leg on Rice)",
-    "Khao Soi (Northern Thai Coconut Curry Noodle Soup)",
-    "Tom Yum Goong (Spicy and Sour Shrimp Soup)",
-    "Tom Kha Gai (Chicken Coconut Soup)",
-    "Som Tum (Green Papaya Salad)",
-    "Larb (Minced Meat Salad)",
-    "Nam Tok Moo (Grilled Pork Salad)",
-    "Yum Woon Sen (Glass Noodle Salad)",
-    "Poh Pia Tod (Spring Rolls)",
-    "Khao Niao Mamuang (Mango Sticky Rice)",
-    "Roti Gluay (Banana Roti)",
-    "Steak",
-    "Hamburger",
-    "Pizza",
-    "French Fries"
+            "Gai Pad Med Mamuang (Cashew Chicken)",
+            "Pad Kana Moo Krob (Crispy Pork Belly with Chinese Broccoli)",
+            "Pad Prik King (Dry Red Curry Stir-Fry)",
+            "Pad Pak Ruam (Mixed Vegetable Stir-Fry)",
+            "Moo Ping (Grilled Pork Skewers)",
+            "Tod Mun Pla (Thai Fish Cakes)",
+            "Gaeng Keow Wan (Green Curry)",
+            "Gaeng Daeng (Red Curry)",
+            "Gaeng Massaman (Massaman Curry)",
+            "Gaeng Panang (Panang Curry)",
+            "Gaeng Som (Sour Curry)",
+            "Gaeng Phed Ped Yang (Roast Duck Red Curry)",
+            "Pad Thai",
+            "Pad See Ew (Stir-Fried Wide Noodles)",
+            "Pad Kee Mao (Drunken Noodles)",
+            "Khao Pad (Thai Fried Rice)",
+            "Khao Pad Sapparod (Pineapple Fried Rice)",
+            "Khao Man Gai (Hainanese Chicken Rice)",
+            "Khao Kha Moo (Braised Pork Leg on Rice)",
+            "Khao Soi (Northern Thai Coconut Curry Noodle Soup)",
+            "Tom Yum Goong (Spicy and Sour Shrimp Soup)",
+            "Tom Kha Gai (Chicken Coconut Soup)",
+            "Som Tum (Green Papaya Salad)",
+            "Larb (Minced Meat Salad)",
+            "Nam Tok Moo (Grilled Pork Salad)",
+            "Yum Woon Sen (Glass Noodle Salad)",
+            "Poh Pia Tod (Spring Rolls)",
+            "Khao Niao Mamuang (Mango Sticky Rice)",
+            "Roti Gluay (Banana Roti)",
+            "Steak",
+            "Hamburger",
+            "Pizza",
+            "French Fries"
         ]
         build_big_screen_page(self, self.menu_items, "food", "#8FC8C2", "#333333")
 
@@ -1030,7 +1030,6 @@ class FoodPage(BasePage):
         self.current_index = idx
         update_big_screen_shared(self, idx)
         self.scroll_area.horizontalScrollBar().setValue(idx * self.total_step)
-        # Open full screen on second tap OR immediately — here we open immediately
         open_fullscreen_for_page(self, idx, back_page_index=2)
 
     def handle_scroll_update(self, value):
@@ -1106,16 +1105,18 @@ class FeelingPage(BasePage):
 class PositionPage(BasePage):
     def __init__(self, app):
         super().__init__(app, "POSITION & COMFORT")
-        self.position_items = ["Adjust Bed",
-    "Pull Me Up",
-    "Support Right Arm",
-    "Turn Me to My Side",
-    "Fix Pillows/Cushions",
-    "Too Hot / Too Cold",
-    "Transfer to Wheelchair",
-    "Transfer to Bed",
-    "Transfer to Commode/Toilet",
-    "Move to Recliner"]
+        self.position_items = [
+            "Adjust Bed",
+            "Pull Me Up",
+            "Support Right Arm",
+            "Turn Me to My Side",
+            "Fix Pillows/Cushions",
+            "Too Hot / Too Cold",
+            "Transfer to Wheelchair",
+            "Transfer to Bed",
+            "Transfer to Commode/Toilet",
+            "Move to Recliner"
+        ]
         build_big_screen_page(self, self.position_items, "position", "#D6EAF8", "#D6EAF8")
 
     def showEvent(self, event):
@@ -1127,7 +1128,7 @@ class PositionPage(BasePage):
         self.current_index = idx
         update_big_screen_shared(self, idx)
         self.scroll_area.horizontalScrollBar().setValue(idx * self.total_step)
-        open_fullscreen_for_page(self, idx, back_page_index=7)
+        open_fullscreen_for_page(self, idx, back_page_index=4)
 
     def handle_scroll_update(self, value):
         index = round(value / self.total_step)
@@ -1147,11 +1148,10 @@ class EntertainmentPage(BasePage):
         super().__init__(app, "ENTERTAINMENT")
         self.entertainment_items = [
             "ESPN", "ESPN2", "FOX Sports", "NBC Sports", "CBS Sports", "TNT Sports",
-            "Peacock", "beIN Sports", "TrueVisions", "Netflix", "HBO", "Disney Channel", "Disney+",
-            "Cartoon Network", "Nickelodeon", "Comedy Central", "ABC", "NBC", "CBS", "FOX",
-            "The CW", "BBC", "National Geographic", "Discovery Channel", "History Channel",
-            "CNN", "MTV", "GMMTV", "Workpoint TV", "Channel 3 (Ch3)", "Channel 7 (Ch7)",
-            "ONE 31", "Thai PBS", "MCOT HD", "True4U", "Amarin TV", "PPTV HD 36",
+            "Peacock", "Netflix", "HBO", "Disney+", "ABC",
+            "BBC", "National Geographic", "History Channel",
+            "CNN", "Channel 3 (Ch3)", "Channel 7 (Ch7)",
+            "ONE 31", "Thai PBS", "Amarin TV",
             "YouTube", "Facebook"
         ]
         build_big_screen_page(self, self.entertainment_items, "entertainment", "#D5F5E3", "#D5F5E3")
@@ -1248,7 +1248,6 @@ class BathroomPage(QFrame):
         grid.setVerticalSpacing(60)
         grid.setContentsMargins(40, 10, 40, 10)
 
-        # Store structured data so we can pass image paths to full-screen page
         self.options_data = [
             ("TOILET",   "I need to use the toilet.",         "#AED6F1", "assets/toilet_pic.png",   0, 0),
             ("SHOWER",   "I would like to take a shower.",    "#A2D9CE", "assets/shower_pic.png",   0, 1),
@@ -1276,27 +1275,17 @@ class BathroomPage(QFrame):
         layout.addSpacing(20)
 
     def handle_bathroom_selection(self, choice):
-        """Show the full-screen item page for the chosen bathroom option."""
-        # Find the matching entry
         match = next((entry for entry in self.options_data if entry[0] == choice), None)
         if match is None:
             return
         t, d, c, media_file, r, col = match
 
-        # Determine emoji fallback
         emoji_map = {
             "TOILET": "🚽", "SHOWER": "🚿", "WASH": "🧼",
             "CLOTHES": "👕", "TEETH": "🧸", "GROOMING": "💈",
         }
         emoji = emoji_map.get(t, "✨")
 
-        # Build a temporary image prefix by stripping _pic.png/_pic.jpg
-        # so show_item() can try  <prefix>_0.png  etc.
-        # Since bathroom images are single named files (not indexed), we handle
-        # them directly: pass the media_file as the "image path" by using a
-        # special prefix trick — we store the full path in image_prefix and
-        # index 0, then show_item checks for <prefix>_<index>.png which won't
-        # match, so we instead override with the direct file approach below.
         self.app.fullscreen_item_page.show_bathroom_item(
             item_name=t,
             description=d,
@@ -1715,7 +1704,6 @@ class WellBeingApp(QWidget):
         self.alert_page = AlertPage(self)
         self.stack.addWidget(self.alert_page)          # index 10
 
-        # ---- NEW: shared full-screen item page ----
         self.fullscreen_item_page = FullScreenItemPage(self)
         self.stack.addWidget(self.fullscreen_item_page)  # index 11
 
@@ -1776,7 +1764,6 @@ class WellBeingApp(QWidget):
 # EXTEND FullScreenItemPage with bathroom support
 # ==========================================
 def _show_bathroom_item(self, item_name, description, media_file, bg_color, emoji_fallback, back_index):
-    """Special loader for BathroomPage — images have direct paths, not indexed."""
     self._back_index = back_index
     self._item_name = item_name
     self.name_label.setText(item_name)
@@ -1815,10 +1802,8 @@ def _show_bathroom_item(self, item_name, description, media_file, bg_color, emoj
         self.image_label.setStyleSheet(
             f"background-color: {bg_color}; color: #2C4C49; border: none;")
 
-    # Also show the description in the name label
     self.name_label.setText(f"{item_name}\n{description}")
 
-# Attach the method dynamically
 FullScreenItemPage.show_bathroom_item = _show_bathroom_item
 
 

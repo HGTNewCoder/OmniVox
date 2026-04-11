@@ -56,7 +56,26 @@
       "RINGS ONCE — TAP BELL TO DISMISS": "ดังครั้งเดียว — แตะกระดิ่งเพื่อปิด",
       "EDIT TIME": "แก้ไขเวลา",
       "CANCEL ALARM": "ยกเลิกการปลุก",
-      "SELECT": "เลือก"
+      "SELECT": "เลือก",
+      "GOOD MORNING, MR. K.D": "สวัสดีตอนเช้า คุณ K.D",
+      "WELCOME TO YOUR DAILY WELL-BEING CHECK-IN": "ยินดีต้อนรับสู่การตรวจสอบสุขภาพประจำวัน",
+      "HOW ARE YOU FEELING TODAY?": "วันนี้คุณรู้สึกเป็นอย่างไรบ้าง?",
+      "CONTINUE TO MENU": "ไปเมนูหลัก",
+      "CANCEL TIMER": "ยกเลิกตัวจับเวลา",
+      "GREAT": "ยอดเยี่ยม",
+      "GOOD": "ดี",
+      "OKAY": "พอใช้",
+      "NOT GREAT": "ไม่ค่อยดี",
+      "IN PAIN": "เจ็บปวด",
+      "YOU LOOK WONDERFUL TODAY!": "วันนี้คุณดูดีมากเลย!",
+      "GLAD TO HEAR IT!": "ดีใจที่ได้ยิน!",
+      "WE ARE HERE FOR YOU.": "เราอยู่ที่นี่เพื่อคุณ",
+      "LET US HELP YOU FEEL BETTER.": "ให้เราช่วยให้คุณรู้สึกดีขึ้น",
+      "STAFF WILL BE NOTIFIED RIGHT AWAY.": "เจ้าหน้าที่จะได้รับแจ้งทันที",
+      "ALARM!": "นาฬิกาปลุก!",
+      "TIMER FINISHED!": "หมดเวลา!",
+      "EMERGENCY! STAFF HAS BEEN ALERTED!": "ฉุกเฉิน! แจ้งเจ้าหน้าที่แล้ว!",
+      "TURN OFF": "ปิด"
     }
   },
   {
@@ -116,7 +135,26 @@
       "RINGS ONCE — TAP BELL TO DISMISS": "Rings once — tap bell to dismiss",
       "EDIT TIME": "Edit time",
       "CANCEL ALARM": "Cancel alarm",
-      "SELECT": "Select"
+      "SELECT": "Select",
+      "GOOD MORNING, MR. K.D": "Good morning, Mr. K.D",
+      "WELCOME TO YOUR DAILY WELL-BEING CHECK-IN": "Welcome to your daily well-being check-in",
+      "HOW ARE YOU FEELING TODAY?": "How are you feeling today?",
+      "CONTINUE TO MENU": "Continue to Menu",
+      "CANCEL TIMER": "Cancel Timer",
+      "GREAT": "Great",
+      "GOOD": "Good",
+      "OKAY": "Okay",
+      "NOT GREAT": "Not great",
+      "IN PAIN": "In pain",
+      "YOU LOOK WONDERFUL TODAY!": "You look wonderful today!",
+      "GLAD TO HEAR IT!": "Glad to hear it!",
+      "WE ARE HERE FOR YOU.": "We are here for you.",
+      "LET US HELP YOU FEEL BETTER.": "Let us help you feel better.",
+      "STAFF WILL BE NOTIFIED RIGHT AWAY.": "Staff will be notified right away.",
+      "ALARM!": "ALARM!",
+      "TIMER FINISHED!": "TIMER FINISHED!",
+      "EMERGENCY! STAFF HAS BEEN ALERTED!": "Emergency! Staff has been alerted!",
+      "TURN OFF": "TURN OFF"
     }
   }
 ]

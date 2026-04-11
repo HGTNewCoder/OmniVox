@@ -21,6 +21,20 @@ GREETING_QUOTE = "Good morning, Mr. K.D 👋"
 GREETING_SUBQUOTE = "Welcome to your daily well-being check-in"
 GREETING_QUESTION = "How are you feeling today?"
 
+# Stacked widget page indices.
+PAGE_WELCOME = 0
+PAGE_MAIN_MENU = 1
+PAGE_FOOD = 2
+PAGE_FEELING = 3
+PAGE_POSITION = 4
+PAGE_BATHROOM = 5
+PAGE_YES_NO = 6
+PAGE_ENTERTAINMENT = 7
+PAGE_RECOMMEND = 8
+PAGE_CLOCK = 9
+PAGE_ALERT = 10
+PAGE_FULLSCREEN_ITEM = 11
+
 
 selected_language = 'en'
 with open(DICT_OF_TRANSLATION_FILENAME, 'r', encoding='utf-8') as f:
@@ -31,94 +45,16 @@ with open(PLACEHOLDER_FILENAME, 'r', encoding='utf-8') as f:
     emoji_map = json.load(f)[0]['emoji_map']
 
 
-# ==========================================
-# FIX 1: Add missing Thai keys to translations_dict at runtime
-# These are strings used in the app but missing from translation.json
-# ==========================================
-EXTRA_TRANSLATIONS = {
-    "th": {
-        # Welcome page
-        "Good morning, Mr. K.D 👋": "สวัสดีตอนเช้า คุณ K.D 👋",
-        "Welcome to your daily well-being check-in": "ยินดีต้อนรับสู่การตรวจสอบสุขภาพประจำวัน",
-        "How are you feeling today?": "วันนี้คุณรู้สึกเป็นอย่างไรบ้าง?",
-        "Continue to Menu ➜": "ไปเมนูหลัก ➜",
-        "Cancel Timer": "ยกเลิกตัวจับเวลา",
-        # Mood labels
-        "Great": "ยอดเยี่ยม",
-        "Good": "ดี",
-        "Okay": "พอใช้",
-        "Not great": "ไม่ค่อยดี",
-        "In pain": "เจ็บปวด",
-        # Mood replies
-        "You look wonderful today! 😊": "วันนี้คุณดูดีมากเลย! 😊",
-        "Glad to hear it! 😊": "ดีใจที่ได้ยิน! 😊",
-        "We are here for you. 💚": "เราอยู่ที่นี่เพื่อคุณ 💚",
-        "Let us help you feel better. 🤝": "ให้เราช่วยให้คุณรู้สึกดีขึ้น 🤝",
-        "Staff will be notified right away. 🔔": "เจ้าหน้าที่จะได้รับแจ้งทันที 🔔",
-        # Main menu header
-        "MY DAILY WELL-BEING": "ความเป็นอยู่ที่ดีของฉัน",
-        # Clock page — FIX 2: keys must match EXACTLY what the code passes to translate()
-        "Tap arrows to set alarm": "แตะลูกศรเพื่อตั้งปลุก",
-        "Tap arrows to set duration": "แตะลูกศรเพื่อตั้งเวลา",
-        # Alert page
-        "ALARM!": "นาฬิกาปลุก!",
-        "TIMER FINISHED!": "หมดเวลา!",
-        "Emergency! Staff has been alerted!": "ฉุกเฉิน! แจ้งเจ้าหน้าที่แล้ว!",
-        "TURN OFF": "ปิด",
-        # Food / Entertainment headers (pages that were missing update_language)
-        "FOOD MENU": "เมนูอาหาร",
-        "ENTERTAINMENT": "ความบันเทิง",
-        # FullScreenItemPage
-        "GO BACK": "ย้อนกลับ",
-        "SELECT": "เลือก",
-    },
-    "en": {
-        "Good morning, Mr. K.D 👋": "Good morning, Mr. K.D 👋",
-        "Welcome to your daily well-being check-in": "Welcome to your daily well-being check-in",
-        "How are you feeling today?": "How are you feeling today?",
-        "Continue to Menu ➜": "Continue to Menu ➜",
-        "Cancel Timer": "Cancel Timer",
-        "Great": "Great",
-        "Good": "Good",
-        "Okay": "Okay",
-        "Not great": "Not great",
-        "In pain": "In pain",
-        "You look wonderful today! 😊": "You look wonderful today! 😊",
-        "Glad to hear it! 😊": "Glad to hear it! 😊",
-        "We are here for you. 💚": "We are here for you. 💚",
-        "Let us help you feel better. 🤝": "Let us help you feel better. 🤝",
-        "Staff will be notified right away. 🔔": "Staff will be notified right away. 🔔",
-        "MY DAILY WELL-BEING": "My Daily Well-Being",
-        "Tap arrows to set alarm": "Tap arrows to set alarm",
-        "Tap arrows to set duration": "Tap arrows to set duration",
-        "ALARM!": "ALARM!",
-        "TIMER FINISHED!": "TIMER FINISHED!",
-        "Emergency! Staff has been alerted!": "Emergency! Staff has been alerted!",
-        "TURN OFF": "TURN OFF",
-        "FOOD MENU": "Food Menu",
-        "ENTERTAINMENT": "Entertainment",
-        "GO BACK": "Go Back",
-        "SELECT": "Select",
-    }
-}
-
-for lang, data in EXTRA_TRANSLATIONS.items():
-    if lang not in translations_dict:
-        translations_dict[lang] = {}
-    for k, v in data.items():
-        # Only add if not already present in translation.json
-        if k not in translations_dict[lang]:
-            translations_dict[lang][k] = v
-
-
 def translate(text, lang_code):
     if not text:
         return ""
-    return translations_dict.get(lang_code, {}).get(text, text)
-<<<<<<< Updated upstream
+    lang_map = translations_dict.get(lang_code, {})
+    normalized = text
+    for ch in ("👋", "😊", "💚", "🤝", "🔔", "➜"):
+        normalized = normalized.replace(ch, "")
+    normalized = " ".join(normalized.split())
+    return lang_map.get(text, lang_map.get(text.upper(), lang_map.get(normalized.upper(), text)))
 
-=======
->>>>>>> Stashed changes
 
 # ==========================================
 # COMMBOX
@@ -467,6 +403,9 @@ class FullScreenItemPage(QFrame):
         self.back_btn.setText(translate("GO BACK", lang_code))
         self.select_btn.setText(translate("SELECT", lang_code))
 
+    def show_bathroom_item(self, item_name, description, media_file, bg_color, emoji_fallback, back_index):
+        _show_bathroom_item(self, item_name, description, media_file, bg_color, emoji_fallback, back_index)
+
 
 # ==========================================
 # PAGE 0: WELCOME PAGE
@@ -580,11 +519,11 @@ class WelcomePage(QFrame):
 
             bv.addWidget(e_lbl)
             bv.addWidget(t_lbl)
-            btn_frame._bg = bg
-            btn_frame._fg = fg
-            btn_frame._label = label         # keep the EN key for logic
-            btn_frame._text_lbl = t_lbl      # reference to update language
-            btn_frame.mousePressEvent = lambda e, f=btn_frame: self.select_mood(f)
+            btn_frame.setProperty("bg", bg)
+            btn_frame.setProperty("fg", fg)
+            btn_frame.setProperty("label_key", label)      # keep EN key for logic
+            btn_frame.setProperty("text_label", t_lbl)     # reference for language updates
+            btn_frame.mousePressEvent = lambda a0, f=btn_frame: self.select_mood(f)
             moods_h.addWidget(btn_frame)
             self.mood_buttons.append(btn_frame)
             self.mood_text_labels.append(t_lbl)
@@ -606,7 +545,7 @@ class WelcomePage(QFrame):
             QPushButton { background-color: #4D908E; color: white; border-radius: 35px; border: none; }
             QPushButton:pressed { background-color: #3a7a77; }
         """)
-        self.continue_btn.clicked.connect(lambda: self.app.stack.setCurrentIndex(1))
+        self.continue_btn.clicked.connect(lambda: self.app.stack.setCurrentIndex(PAGE_MAIN_MENU))
         main.addWidget(self.continue_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._set_opacity(self.greeting_frame, 0)
@@ -665,7 +604,7 @@ class WelcomePage(QFrame):
                           border: 1.5px solid #D4A84B; font-size: 15px; font-weight: bold; }
             QPushButton:pressed { background-color: #F5E6C8; }
         """)
-        self.change_time_btn.clicked.connect(lambda: self.app.stack.setCurrentIndex(9))
+        self.change_time_btn.clicked.connect(lambda: self.app.stack.setCurrentIndex(PAGE_CLOCK))
 
         self.cancel_alarm_btn = QPushButton(translate("CANCEL ALARM", selected_language))
         self.cancel_alarm_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -743,17 +682,18 @@ class WelcomePage(QFrame):
             mb.setStyleSheet(
                 "background-color: white; border: 2px solid #8FC8C2; border-radius: 20px;")
         frame.setStyleSheet(
-            f"background-color: {frame._bg}; border: 2px solid {frame._fg}; border-radius: 20px;")
+            f"background-color: {frame.property('bg')}; border: 2px solid {frame.property('fg')}; border-radius: 20px;")
 
-        reply_key = replies.get(frame._label, "")
+        label_key = frame.property("label_key")
+        reply_key = replies.get(label_key, "")
         self.reply_label.setText(translate(reply_key, self.current_lang))
 
-        if frame._label == "In pain":
+        if label_key == "In pain":
             QTimer.singleShot(1000, lambda: QMessageBox.warning(
                 self, "Alert", "Staff Alerted — patient reports pain!"))
-            QTimer.singleShot(2500, lambda: self.app.stack.setCurrentIndex(1))
+            QTimer.singleShot(2500, lambda: self.app.stack.setCurrentIndex(PAGE_MAIN_MENU))
         else:
-            QTimer.singleShot(1000, lambda: self.app.stack.setCurrentIndex(1))
+            QTimer.singleShot(1000, lambda: self.app.stack.setCurrentIndex(PAGE_MAIN_MENU))
 
     def update_language(self, lang_code):
         self.current_lang = lang_code
@@ -764,7 +704,10 @@ class WelcomePage(QFrame):
         self.cancel_timer_btn.setText("✕ " + translate("Cancel Timer", lang_code))
         # FIX 4: translate mood labels using the EN key stored in _label
         for btn_frame in self.mood_buttons:
-            btn_frame._text_lbl.setText(translate(btn_frame._label, lang_code))
+            text_lbl = btn_frame.property("text_label")
+            label_key = btn_frame.property("label_key")
+            if text_lbl is not None:
+                text_lbl.setText(translate(label_key, lang_code))
         self.alarm_scheduled_label.setText(translate("ALARM SCHEDULED", lang_code))
         self.alarm_sub_label.setText(translate("RINGS ONCE — TAP BELL TO DISMISS", lang_code))
         self.change_time_btn.setText(translate("EDIT TIME", lang_code))
@@ -870,18 +813,18 @@ class MainMenuPage(QFrame):
 
     def navigate(self, title):
         pages = {
-            "FOOD": 2,
-            "FEELING": 3,
-            "POSITION & COMFORT": 4,
-            "BATHROOM": 5,
-            "YES / NO": 6,
-            "ENTERTAINMENT": 7,
-            "RECOMMEND ANSWER": 8
+            "FOOD": PAGE_FOOD,
+            "FEELING": PAGE_FEELING,
+            "POSITION & COMFORT": PAGE_POSITION,
+            "BATHROOM": PAGE_BATHROOM,
+            "YES / NO": PAGE_YES_NO,
+            "ENTERTAINMENT": PAGE_ENTERTAINMENT,
+            "RECOMMEND ANSWER": PAGE_RECOMMEND,
         }
         if title in pages:
             self.app.stack.setCurrentIndex(pages[title])
         elif title == "CLOCK":
-            self.app.stack.setCurrentIndex(9)
+            self.app.stack.setCurrentIndex(PAGE_CLOCK)
         elif title == "BELL":
             self.app.trigger_alert("Emergency! Staff has been alerted!")
 
@@ -904,6 +847,13 @@ class BasePage(QFrame):
         super().__init__()
         self.app = app
         self.original_title = title
+        self.scroll_area = QScrollArea()
+        self.total_step = 1
+        self._items = []
+        self.current_index = 0
+        self.big_screen = QLabel()
+        self.h_layout = QHBoxLayout()
+        self._box_widgets = []
         self.setStyleSheet("background-color: #F0F8F7;")
         layout = QVBoxLayout(self)
 
@@ -919,7 +869,7 @@ class BasePage(QFrame):
         self.back_btn.setStyleSheet(
             "background-color: #BDBDBD; color: white; border-radius: 15px; "
             "font-weight: bold; font-size: 20px; border: none;")
-        self.back_btn.clicked.connect(lambda: self.app.stack.setCurrentIndex(1))
+        self.back_btn.clicked.connect(lambda: self.app.stack.setCurrentIndex(PAGE_MAIN_MENU))
 
         layout.addWidget(self.back_btn, alignment=Qt.AlignmentFlag.AlignCenter)
         self.page_layout = layout
@@ -977,8 +927,9 @@ def build_big_screen_page(page, items, image_prefix, border_color, bg_fallback):
     page.scroll_area.setWidgetResizable(True)
     page.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
     page.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    page.scroll_area.horizontalScrollBar().setStyleSheet(
-        "QScrollBar {height:0px; background: transparent;}")
+    hbar = page.scroll_area.horizontalScrollBar()
+    if hbar is not None:
+        hbar.setStyleSheet("QScrollBar {height:0px; background: transparent;}")
     page.scroll_area.setStyleSheet("border: none; background: transparent;")
     QScroller.grabGesture(page.scroll_area.viewport(),
                           QScroller.ScrollerGestureType.LeftMouseButtonGesture)
@@ -1019,7 +970,9 @@ def build_big_screen_page(page, items, image_prefix, border_color, bg_fallback):
     page.page_layout.insertWidget(2, page.scroll_area)
     page.page_layout.setStretchFactor(page.big_screen, 1)
     page.page_layout.setStretchFactor(page.scroll_area, 0)
-    page.scroll_area.horizontalScrollBar().valueChanged.connect(page.handle_scroll_update)
+    hbar = page.scroll_area.horizontalScrollBar()
+    if hbar is not None:
+        hbar.valueChanged.connect(page.handle_scroll_update)
     page.page_layout.setContentsMargins(25, 5, 25, 15)
 
 
@@ -1082,14 +1035,15 @@ def open_fullscreen_for_page(page, idx, back_page_index):
         emoji_fallback=emoji,
         back_index=back_page_index,
     )
-    page.app.stack.setCurrentIndex(11)
+    page.app.stack.setCurrentIndex(PAGE_FULLSCREEN_ITEM)
 
 
 def big_screen_update_language(page, lang_code):
     """Update thumbnail label text and big screen for scrollable pages."""
     if hasattr(page, '_items_by_language') and page._items_by_language:
         page._items = page._items_by_language.get(lang_code, page._items_by_language.get("en", page._items))
-        for idx, (_, label) in enumerate(page._box_widgets):
+        for idx, item in enumerate(page._box_widgets):
+            label = item[1]
             if idx < len(page._items):
                 label.setText(page._items[idx])
         # Also refresh big screen text if no image
@@ -1097,21 +1051,25 @@ def big_screen_update_language(page, lang_code):
             update_big_screen_shared(page, page.current_index)
         return
 
-    for original_name, label in page._box_widgets:
+    for item in page._box_widgets:
+        original_name, label = item[0], item[1]
         label.setText(translate(original_name, lang_code))
     if hasattr(page, 'current_index'):
         update_big_screen_shared(page, page.current_index)
 
 
 # ==========================================
-# FOOD PAGE (index 2)
+# SHARED CATEGORY PAGE (scrollable + big-screen)
 # ==========================================
-class FoodPage(BasePage):
-    def __init__(self, app):
-        super().__init__(app, "FOOD MENU")
-        self.file_path = "json_page/food.json"
-        self.menu_items = self.load_items_from_json(self.file_path, selected_language)
-        build_big_screen_page(self, self.menu_items, "food", "#FDEBD0", "#FDEBD0")
+class ScrollableCategoryPage(BasePage):
+    def __init__(self, app, title, data_file, image_prefix, border_color, bg_fallback,
+                 back_page_index, translate_item_names=True):
+        super().__init__(app, title)
+        self.file_path = data_file
+        self._back_page_index = back_page_index
+        self._translate_item_names = translate_item_names
+        self.items = self.load_items_from_json(self.file_path, selected_language)
+        build_big_screen_page(self, self.items, image_prefix, border_color, bg_fallback)
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -1121,8 +1079,10 @@ class FoodPage(BasePage):
     def on_box_clicked(self, idx):
         self.current_index = idx
         update_big_screen_shared(self, idx)
-        self.scroll_area.horizontalScrollBar().setValue(idx * self.total_step)
-        open_fullscreen_for_page(self, idx, back_page_index=2)
+        hbar = self.scroll_area.horizontalScrollBar()
+        if hbar is not None:
+            hbar.setValue(idx * self.total_step)
+        open_fullscreen_for_page(self, idx, back_page_index=self._back_page_index)
 
     def handle_scroll_update(self, value):
         index = round(value / self.total_step)
@@ -1133,116 +1093,78 @@ class FoodPage(BasePage):
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
 
-    # FIX 5: FoodPage was completely missing update_language — header & back btn stayed English
     def update_language(self, lang_code):
         super().update_language(lang_code)
-        # Food names intentionally NOT translated, only header/back btn via super()
+        if self._translate_item_names:
+            big_screen_update_language(self, lang_code)
+
+
+# ==========================================
+# FOOD PAGE (index 2)
+# ==========================================
+class FoodPage(ScrollableCategoryPage):
+    def __init__(self, app):
+        super().__init__(
+            app=app,
+            title="FOOD MENU",
+            data_file="json_page/food.json",
+            image_prefix="food",
+            border_color="#FDEBD0",
+            bg_fallback="#FDEBD0",
+            back_page_index=PAGE_FOOD,
+            translate_item_names=False,
+        )
 
 
 # ==========================================
 # FEELING PAGE (index 3)
 # ==========================================
-class FeelingPage(BasePage):
+class FeelingPage(ScrollableCategoryPage):
     def __init__(self, app):
-        super().__init__(app, "FEELING & MOOD")
-        self.file_path = "json_page/feelings.json"
-        self.feeling_items = self.load_items_from_json(self.file_path, selected_language)
-        build_big_screen_page(self, self.feeling_items, "feeling", "#F9E79F", "#F9E79F")
-
-    def showEvent(self, event):
-        super().showEvent(event)
-        if hasattr(self, 'current_index'):
-            update_big_screen_shared(self, self.current_index)
-
-    def on_box_clicked(self, idx):
-        self.current_index = idx
-        update_big_screen_shared(self, idx)
-        self.scroll_area.horizontalScrollBar().setValue(idx * self.total_step)
-        open_fullscreen_for_page(self, idx, back_page_index=3)
-
-    def handle_scroll_update(self, value):
-        index = round(value / self.total_step)
-        if 0 <= index < len(self._items) and index != self.current_index:
-            self.current_index = index
-            update_big_screen_shared(self, index)
-
-    def update_big_screen(self, index):
-        update_big_screen_shared(self, index)
-
-    def update_language(self, lang_code):
-        super().update_language(lang_code)
-        big_screen_update_language(self, lang_code)
+        super().__init__(
+            app=app,
+            title="FEELING & MOOD",
+            data_file="json_page/feelings.json",
+            image_prefix="feeling",
+            border_color="#F9E79F",
+            bg_fallback="#F9E79F",
+            back_page_index=PAGE_FEELING,
+            translate_item_names=True,
+        )
 
 
 # ==========================================
 # POSITION & COMFORT PAGE (index 4)
 # ==========================================
-class PositionPage(BasePage):
+class PositionPage(ScrollableCategoryPage):
     def __init__(self, app):
-        super().__init__(app, "POSITION & COMFORT")
-        self.file_path = "json_page/position.json"
-        self.position_items = self.load_items_from_json(self.file_path, selected_language)
-        build_big_screen_page(self, self.position_items, "position", "#D6EAF8", "#D6EAF8")
-
-    def showEvent(self, event):
-        super().showEvent(event)
-        if hasattr(self, 'current_index'):
-            update_big_screen_shared(self, self.current_index)
-
-    def on_box_clicked(self, idx):
-        self.current_index = idx
-        update_big_screen_shared(self, idx)
-        self.scroll_area.horizontalScrollBar().setValue(idx * self.total_step)
-        open_fullscreen_for_page(self, idx, back_page_index=4)
-
-    def handle_scroll_update(self, value):
-        index = round(value / self.total_step)
-        if 0 <= index < len(self._items) and index != self.current_index:
-            self.current_index = index
-            update_big_screen_shared(self, index)
-
-    def update_big_screen(self, index):
-        update_big_screen_shared(self, index)
-
-    def update_language(self, lang_code):
-        super().update_language(lang_code)
-        big_screen_update_language(self, lang_code)
+        super().__init__(
+            app=app,
+            title="POSITION & COMFORT",
+            data_file="json_page/position.json",
+            image_prefix="position",
+            border_color="#D6EAF8",
+            bg_fallback="#D6EAF8",
+            back_page_index=PAGE_POSITION,
+            translate_item_names=True,
+        )
 
 
 # ==========================================
 # ENTERTAINMENT PAGE (index 7)
 # ==========================================
-class EntertainmentPage(BasePage):
+class EntertainmentPage(ScrollableCategoryPage):
     def __init__(self, app):
-        super().__init__(app, "ENTERTAINMENT")
-        self.file_path = "json_page/entertainment.json"
-        self.entertainment_items = self.load_items_from_json(self.file_path, selected_language)
-        build_big_screen_page(self, self.entertainment_items, "entertainment", "#D5F5E3", "#D5F5E3")
-
-    def showEvent(self, event):
-        super().showEvent(event)
-        if hasattr(self, 'current_index'):
-            update_big_screen_shared(self, self.current_index)
-
-    def on_box_clicked(self, idx):
-        self.current_index = idx
-        update_big_screen_shared(self, idx)
-        self.scroll_area.horizontalScrollBar().setValue(idx * self.total_step)
-        open_fullscreen_for_page(self, idx, back_page_index=7)
-
-    def handle_scroll_update(self, value):
-        index = round(value / self.total_step)
-        if 0 <= index < len(self._items) and index != self.current_index:
-            self.current_index = index
-            update_big_screen_shared(self, index)
-
-    def update_big_screen(self, index):
-        update_big_screen_shared(self, index)
-
-    # FIX 6: EntertainmentPage was also missing update_language entirely
-    def update_language(self, lang_code):
-        super().update_language(lang_code)
-        # Channel names intentionally NOT translated, only header/back btn via super()
+        super().__init__(
+            app=app,
+            title="ENTERTAINMENT",
+            data_file="json_page/entertainment.json",
+            image_prefix="entertainment",
+            border_color="#D5F5E3",
+            bg_fallback="#D5F5E3",
+            back_page_index=PAGE_ENTERTAINMENT,
+            translate_item_names=False,
+        )
 
 
 # ==========================================
@@ -1257,7 +1179,10 @@ class RecommendPage(BasePage):
         # Collect box button references after build_big_screen_page creates them
         self._box_buttons = []
         for i in range(self.h_layout.count()):
-            widget = self.h_layout.itemAt(i).widget()
+            item = self.h_layout.itemAt(i)
+            if item is None:
+                continue
+            widget = item.widget()
             if widget:
                 self._box_buttons.append(widget)
 
@@ -1294,7 +1219,9 @@ class RecommendPage(BasePage):
         self.current_index = idx
         self._highlight_box(idx)
         self._update_recommend_big_screen(idx)
-        self.scroll_area.horizontalScrollBar().setValue(idx * self.total_step)
+        hbar = self.scroll_area.horizontalScrollBar()
+        if hbar is not None:
+            hbar.setValue(idx * self.total_step)
 
     def handle_scroll_update(self, value):
         index = round(value / self.total_step)
@@ -1355,7 +1282,7 @@ class BathroomPage(QFrame):
         self.back_btn.setStyleSheet(
             "background-color: #BDBDBD; color: white; border-radius: 15px; "
             "font-weight: bold; font-size: 20px; border: none;")
-        self.back_btn.clicked.connect(lambda: self.app.stack.setCurrentIndex(1))
+        self.back_btn.clicked.connect(lambda: self.app.stack.setCurrentIndex(PAGE_MAIN_MENU))
         layout.addWidget(self.back_btn, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addSpacing(20)
 
@@ -1423,9 +1350,9 @@ class BathroomPage(QFrame):
             media_file=media_file,
             bg_color=c,
             emoji_fallback=emoji,
-            back_index=5,
+            back_index=PAGE_BATHROOM,
         )
-        self.app.stack.setCurrentIndex(11)
+        self.app.stack.setCurrentIndex(PAGE_FULLSCREEN_ITEM)
 
     # FIX 7: Removed broken title_label check (hide_title=True means it never exists)
     # Only update desc_label which is what's actually visible
@@ -1472,7 +1399,7 @@ class YesNoPage(QFrame):
         self.back_btn_resp.setStyleSheet(
             "background-color: #BDBDBD; color: white; border-radius: 10px; "
             "font-weight: bold; border: none;")
-        self.back_btn_resp.clicked.connect(lambda: self.app.stack.setCurrentIndex(1))
+        self.back_btn_resp.clicked.connect(lambda: self.app.stack.setCurrentIndex(PAGE_MAIN_MENU))
         layout.addWidget(self.back_btn_resp, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.result_container = QFrame()
@@ -1545,7 +1472,7 @@ class YesNoPage(QFrame):
         self.back_btn_resp.show()
         self.yes_card.show()
         self.no_card.show()
-        self.app.stack.setCurrentIndex(1)
+        self.app.stack.setCurrentIndex(PAGE_MAIN_MENU)
 
     def update_language(self, lang_code):
         self.resp_title.setText(translate("CHOOSE ANSWER", lang_code))
@@ -1669,7 +1596,7 @@ class ClockPage(QFrame):
         self.back_btn_clock.setStyleSheet(
             "background-color: #BDBDBD; color: white; border-radius: 50px; "
             "font-weight: bold; font-size: 30px; border: none;")
-        self.back_btn_clock.clicked.connect(lambda: self.app.stack.setCurrentIndex(1))
+        self.back_btn_clock.clicked.connect(lambda: self.app.stack.setCurrentIndex(PAGE_MAIN_MENU))
 
         act_layout.addWidget(self.back_btn_clock)
         act_layout.addWidget(self.start_btn)
@@ -1706,7 +1633,7 @@ class ClockPage(QFrame):
         else:
             self.app.timer_seconds_remaining = (t.hour() * 3600) + (t.minute() * 60)
             self.time_spinner.setTime(QTime(0, 0))
-        self.app.stack.setCurrentIndex(0)
+        self.app.stack.setCurrentIndex(PAGE_WELCOME)
 
     def update_language(self, lang_code):
         # FIX 10: set current_lang FIRST before any translate() calls
@@ -1785,7 +1712,7 @@ class AlertPage(QFrame):
 
     def dismiss_alert(self):
         self.app.sound_effect.stop()
-        self.app.stack.setCurrentIndex(1)
+        self.app.stack.setCurrentIndex(PAGE_MAIN_MENU)
 
     def update_language(self, lang_code):
         self.stop_btn.setText(translate("TURN OFF", lang_code))
@@ -1813,40 +1740,40 @@ class WellBeingApp(QWidget):
         self.stack = QStackedWidget(self)
 
         self.welcome_page = WelcomePage(self)
-        self.stack.addWidget(self.welcome_page)        # index 0
+        self.stack.addWidget(self.welcome_page)        # index PAGE_WELCOME
 
         self.main_menu = MainMenuPage(self)
-        self.stack.addWidget(self.main_menu)           # index 1
+        self.stack.addWidget(self.main_menu)           # index PAGE_MAIN_MENU
 
         self.food_page = FoodPage(self)
-        self.stack.addWidget(self.food_page)           # index 2
+        self.stack.addWidget(self.food_page)           # index PAGE_FOOD
 
         self.feeling_page = FeelingPage(self)
-        self.stack.addWidget(self.feeling_page)        # index 3
+        self.stack.addWidget(self.feeling_page)        # index PAGE_FEELING
 
         self.position_page = PositionPage(self)
-        self.stack.addWidget(self.position_page)       # index 4
+        self.stack.addWidget(self.position_page)       # index PAGE_POSITION
 
         self.bathroom_page = BathroomPage(self)
-        self.stack.addWidget(self.bathroom_page)       # index 5
+        self.stack.addWidget(self.bathroom_page)       # index PAGE_BATHROOM
 
         self.yes_no_page = YesNoPage(self)
-        self.stack.addWidget(self.yes_no_page)         # index 6
+        self.stack.addWidget(self.yes_no_page)         # index PAGE_YES_NO
 
         self.entertainment_page = EntertainmentPage(self)
-        self.stack.addWidget(self.entertainment_page)  # index 7
+        self.stack.addWidget(self.entertainment_page)  # index PAGE_ENTERTAINMENT
 
         self.recommend_page = RecommendPage(self)
-        self.stack.addWidget(self.recommend_page)      # index 8
+        self.stack.addWidget(self.recommend_page)      # index PAGE_RECOMMEND
 
         self.clock_page = ClockPage(self)
-        self.stack.addWidget(self.clock_page)          # index 9
+        self.stack.addWidget(self.clock_page)          # index PAGE_CLOCK
 
         self.alert_page = AlertPage(self)
-        self.stack.addWidget(self.alert_page)          # index 10
+        self.stack.addWidget(self.alert_page)          # index PAGE_ALERT
 
         self.fullscreen_item_page = FullScreenItemPage(self)
-        self.stack.addWidget(self.fullscreen_item_page)  # index 11
+        self.stack.addWidget(self.fullscreen_item_page)  # index PAGE_FULLSCREEN_ITEM
 
         self.pages = [
             self.welcome_page, self.main_menu, self.food_page, self.feeling_page,
@@ -1893,7 +1820,7 @@ class WellBeingApp(QWidget):
         self.sound_effect.play()
         is_emergency = "Emergency" in text or "pain" in text.lower()
         self.alert_page.set_alert_style(text, is_emergency)
-        self.stack.setCurrentIndex(10)
+        self.stack.setCurrentIndex(PAGE_ALERT)
 
     def update_language(self, lang_code):
         self._current_lang = lang_code
@@ -1901,8 +1828,9 @@ class WellBeingApp(QWidget):
             if hasattr(page, 'update_language'):
                 page.update_language(lang_code)
         current_page = self.stack.currentWidget()
-        if hasattr(current_page, 'current_index') and hasattr(current_page, 'big_screen'):
-            update_big_screen_shared(current_page, current_page.current_index)
+        current_index = getattr(current_page, 'current_index', None)
+        if current_index is not None and hasattr(current_page, 'big_screen'):
+            update_big_screen_shared(current_page, current_index)
 
 
 # ==========================================
@@ -1948,9 +1876,6 @@ def _show_bathroom_item(self, item_name, description, media_file, bg_color, emoj
             f"background-color: {bg_color}; color: #2C4C49; border: none;")
 
     self.name_label.setText(f"{item_name}\n{description}")
-
-FullScreenItemPage.show_bathroom_item = _show_bathroom_item
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

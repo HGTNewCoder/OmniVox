@@ -1,0 +1,88 @@
+{
+  "items": [
+    {
+      "id": "TOILET",
+      "message_key": "I NEED TO USE THE TOILET.",
+      "color": "#AED6F1",
+      "image_path": "assets/toilet_pic.png",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "SHOWER",
+      "message_key": "I WOULD LIKE TO TAKE A SHOWER.",
+      "color": "#A2D9CE",
+      "image_path": "assets/shower_pic.png",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "WASH",
+      "message_key": "I NEED TO WASH MY HANDS/FACE.",
+      "color": "#F9E79F",
+      "image_path": "assets/wash_pic.png",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "CLOTHES",
+      "message_key": "I NEED HELP CHANGING CLOTHES.",
+      "color": "#D7BDE2",
+      "image_path": "assets/clothes_pic.png",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "TEETH",
+      "message_key": "I NEED TO CHANGE THE DIAPER.",
+      "color": "#F5B7B1",
+      "image_path": "assets/diaper_pic.png",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "GROOMING",
+      "message_key": "I NEED HELP WITH HAIR OR SHAVING.",
+      "color": "#FAD7A1",
+      "image_path": "assets/grooming_pic.png",
+      "row": 1,
+      "col": 2
+    }
+  ],
+  "translations": [
+    {
+      "language": "en",
+      "data": {
+        "TOILET": "Toilet",
+        "I NEED TO USE THE TOILET.": "I need to use the toilet.",
+        "SHOWER": "Shower",
+        "I WOULD LIKE TO TAKE A SHOWER.": "I would like to take a shower.",
+        "WASH": "Wash",
+        "I NEED TO WASH MY HANDS/FACE.": "I need to wash my hands/face.",
+        "CLOTHES": "Clothes",
+        "I NEED HELP CHANGING CLOTHES.": "I need help changing clothes.",
+        "TEETH": "Teeth",
+        "I NEED TO CHANGE THE DIAPER.": "I need to change the diaper.",
+        "GROOMING": "Grooming",
+        "I NEED HELP WITH HAIR OR SHAVING.": "I need help with hair or shaving."
+      }
+    },
+    {
+      "language": "th",
+      "data": {
+        "TOILET": "เข้าห้องน้ำ",
+        "I NEED TO USE THE TOILET.": "ฉันต้องการเข้าห้องน้ำ",
+        "SHOWER": "อาบน้ำ",
+        "I WOULD LIKE TO TAKE A SHOWER.": "ฉันต้องการอาบน้ำ",
+        "WASH": "ล้างหน้า/ล้างมือ",
+        "I NEED TO WASH MY HANDS/FACE.": "ฉันต้องการล้างหน้าและมือ",
+        "CLOTHES": "เปลี่ยนเสื้อผ้า",
+        "I NEED HELP CHANGING CLOTHES.": "ฉันต้องการเปลี่ยนเสื้อผ้า",
+        "TEETH": "เปลี่ยนผ้าอ้อม",
+        "I NEED TO CHANGE THE DIAPER.": "ฉันต้องการเปลี่ยนผ้าอ้อม",
+        "GROOMING": "จัดแต่งทรงผม",
+        "I NEED HELP WITH HAIR OR SHAVING.": "ฉันต้องการความช่วยเหลือเรื่องทรงผมหรือโกนหนวด"
+      }
+    }
+  ]
+}

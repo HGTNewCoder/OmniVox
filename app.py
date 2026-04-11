@@ -22,7 +22,7 @@ GREETING_SUBQUOTE = "Welcome to your daily well-being check-in"
 GREETING_QUESTION = "How are you feeling today?"
 
 
-selected_language = 'th'
+selected_language = 'en'
 with open(DICT_OF_TRANSLATION_FILENAME, 'r', encoding='utf-8') as f:
     temp = json.load(f)
 translations_dict = {item["language"]: item["data"] for item in temp}
@@ -139,8 +139,9 @@ class CommBox(QFrame):
                     "color: #2C4C49; padding: 15px;" if self.use_picture else "color: #2C4C49; padding-top: 10px;")
             else:
                 self.title_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
-                if self.use_picture:
-                    self.title_label.setStyleSheet("padding: 10px;")
+                self.title_label.setStyleSheet(
+                    "color: #2C4C49; padding: 10px;" if self.use_picture
+                    else "color: #2C4C49; padding-top: 10px;")
             top_layout.addWidget(self.title_label)
 
         if self.use_picture and media_file and os.path.exists(media_file):
@@ -173,7 +174,7 @@ class CommBox(QFrame):
         self.desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.desc_label.setFont(
             QFont("Arial", 18 if (self.large_text or self.hide_title) else 15, QFont.Weight.Bold))
-        self.desc_label.setStyleSheet("color: #444444;" if (self.large_text or self.hide_title) else "")
+        self.desc_label.setStyleSheet("color: #444444;")
         bottom_layout.addWidget(self.desc_label)
         bottom_layout.addStretch(1)
 
@@ -386,7 +387,7 @@ class WelcomePage(QFrame):
     def __init__(self, app):
         super().__init__()
         self.app = app
-        self.current_lang = "en"
+        self.current_lang = selected_language
         self.setStyleSheet("background-color: #F0F8F7;")
 
         main = QVBoxLayout(self)
@@ -754,6 +755,7 @@ class MainMenuPage(QFrame):
         self.main_layout.addLayout(self.grid)
 
     def load_cards_from_json(self):
+        card_data = []
         try:
             with open(self.file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -772,10 +774,10 @@ class MainMenuPage(QFrame):
                 ]
         except FileNotFoundError:
             print(f"Error: {self.file_path} not found.")
-            self.card_data = []
+            card_data = []
         except Exception as e:
             print(f"An error occurred: {e}")
-            self.card_data = []
+            card_data = []
         return card_data
 
     def toggle_language(self):
@@ -843,10 +845,26 @@ class BasePage(QFrame):
         self.page_layout = layout
     
     def load_items_from_json(self, file_path, selected_language):
+        returned_list = []
+        self._items_by_language = {}
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 temp = json.load(f)
-                returned_list = {item["language"]: item["data"] for item in temp}[selected_language]
+                lang_map = {item["language"]: item["data"] for item in temp}
+
+                # Support both list-based and dict-based data payloads.
+                for lang, data in lang_map.items():
+                    if isinstance(data, dict):
+                        self._items_by_language[lang] = list(data.values())
+                    elif isinstance(data, list):
+                        self._items_by_language[lang] = list(data)
+                    else:
+                        self._items_by_language[lang] = []
+
+                returned_list = self._items_by_language.get(
+                    selected_language,
+                    self._items_by_language.get("en", [])
+                )
 
         except FileNotFoundError:
             print("Error: File not found.")
@@ -961,7 +979,10 @@ def update_big_screen_shared(page, index):
     else:
         page.big_screen.setPixmap(QPixmap())
         lang = getattr(page.app, '_current_lang', 'en')
-        page.big_screen.setText(translate(page._items[index], lang))
+        if hasattr(page, '_items_by_language') and getattr(page, '_items_by_language', None):
+            page.big_screen.setText(page._items[index])
+        else:
+            page.big_screen.setText(translate(page._items[index], lang))
         page.big_screen.setStyleSheet(
             f"background-color: {page._bg_fallback}; color: #2C4C49; font-size: 36px; "
             f"font-weight: bold; border-radius: 25px; border: none; padding: 20px;")
@@ -972,7 +993,10 @@ def open_fullscreen_for_page(page, idx, back_page_index):
     """Helper: push the full-screen item page for any big-screen page."""
     emoji = emoji_map.get(page._image_prefix, "✨")
     lang = getattr(page.app, '_current_lang', 'en')
-    display_name = translate(page._items[idx], lang)
+    if hasattr(page, '_items_by_language') and getattr(page, '_items_by_language', None):
+        display_name = page._items[idx]
+    else:
+        display_name = translate(page._items[idx], lang)
     page.app.fullscreen_item_page.show_item(
         item_name=display_name,
         item_index=idx,
@@ -986,6 +1010,13 @@ def open_fullscreen_for_page(page, idx, back_page_index):
 
 def big_screen_update_language(page, lang_code):
     """Update the thumbnail label text for scrollable pages."""
+    if hasattr(page, '_items_by_language') and getattr(page, '_items_by_language', None):
+        page._items = page._items_by_language.get(lang_code, page._items_by_language.get("en", page._items))
+        for idx, (_, label) in enumerate(page._box_widgets):
+            if idx < len(page._items):
+                label.setText(page._items[idx])
+        return
+
     for original_name, label in page._box_widgets:
         label.setText(translate(original_name, lang_code))
 
@@ -998,6 +1029,7 @@ class FoodPage(BasePage):
         super().__init__(app, "FOOD MENU")
         self.file_path = "json_page/food.json"
         self.menu_items = self.load_items_from_json(self.file_path, selected_language)
+        build_big_screen_page(self, self.menu_items, "food", "#FDEBD0", "#FDEBD0")
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -1193,6 +1225,8 @@ class BathroomPage(QFrame):
     def __init__(self, app):
         super().__init__()
         self.app = app
+        self.file_path = 'json_page/bathroom.json'
+        self.bathroom_translations = {}
         self.setStyleSheet("background-color: #F0F8F7;")
         layout = QVBoxLayout(self)
 
@@ -1207,19 +1241,16 @@ class BathroomPage(QFrame):
         grid.setVerticalSpacing(60)
         grid.setContentsMargins(40, 10, 40, 10)
 
-        self.options_data = [
-            ("TOILET",   "I need to use the toilet.",         "#AED6F1", "assets/toilet_pic.png",   0, 0),
-            ("SHOWER",   "I would like to take a shower.",    "#A2D9CE", "assets/shower_pic.png",   0, 1),
-            ("WASH",     "I need to wash my hands/face.",     "#F9E79F", "assets/wash_pic.png",     0, 2),
-            ("CLOTHES",  "I need help changing clothes.",     "#D7BDE2", "assets/clothes_pic.png",  1, 0),
-            ("TEETH",    "I need to change the diaper.",      "#F5B7B1", "assets/diaper_pic.png",   1, 1),
-            ("GROOMING", "I need help with hair or shaving.", "#FAD7A1", "assets/grooming_pic.png", 1, 2),
-        ]
+        self.options_data = self.load_options_data()
+        initial_lang = getattr(self.app, '_current_lang', selected_language)
+
         self.cards = []
         for t, d, c, mf, r, col in self.options_data:
             card = CommBox(title=t, description=d, bg_color=c, media_file=mf,
                            show_btn=False, add_shadow=True, use_picture=True,
                            hide_title=True, callback=self.handle_bathroom_selection)
+            if hasattr(card, 'desc_label'):
+                card.desc_label.setText(self._bathroom_translate(d, initial_lang))
             self.cards.append(card)
             grid.addWidget(card, r, col)
 
@@ -1233,6 +1264,57 @@ class BathroomPage(QFrame):
         layout.addWidget(self.back_btn, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addSpacing(20)
 
+    def load_options_data(self):
+        try:
+            with open(self.file_path, 'r', encoding='utf-8') as f:
+                payload = json.load(f)
+
+            items = []
+            translations = []
+
+            # New combined schema: {"items": [...], "translations": [...]}.
+            if isinstance(payload, dict):
+                items = payload.get('items', [])
+                translations = payload.get('translations', [])
+            # Backward compatibility with older list schemas.
+            elif isinstance(payload, list):
+                if payload and isinstance(payload[0], dict) and 'id' in payload[0]:
+                    items = payload
+                elif payload and isinstance(payload[0], dict) and 'language' in payload[0]:
+                    translations = payload
+
+            self.bathroom_translations = {
+                entry.get('language'): entry.get('data', {})
+                for entry in translations
+                if isinstance(entry, dict) and 'language' in entry
+            }
+
+            return [
+                (
+                    item['id'],
+                    item.get('message_key', item.get('message', '')),
+                    item['color'],
+                    item['image_path'],
+                    item['row'],
+                    item['col']
+                )
+                for item in items
+            ]
+        except FileNotFoundError:
+            print(f"Error: The file {self.file_path} was not found.")
+            return []
+        except KeyError as e:
+            print(f"Error: Missing expected key in JSON: {e}")
+            return []
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return []
+
+    def _bathroom_translate(self, text, lang_code):
+        if lang_code in self.bathroom_translations:
+            return self.bathroom_translations[lang_code].get(text, translate(text, lang_code))
+        return translate(text, lang_code)
+
     def handle_bathroom_selection(self, choice):
         match = next((entry for entry in self.options_data if entry[0] == choice), None)
         if match is None:
@@ -1244,8 +1326,8 @@ class BathroomPage(QFrame):
         lang = getattr(self.app, '_current_lang', 'en')
 
         self.app.fullscreen_item_page.show_bathroom_item(
-            item_name=translate(t, lang),
-            description=translate(d, lang),
+            item_name=self._bathroom_translate(t, lang),
+            description=self._bathroom_translate(d, lang),
             media_file=media_file,
             bg_color=c,
             emoji_fallback=emoji,
@@ -1255,9 +1337,12 @@ class BathroomPage(QFrame):
 
     def update_language(self, lang_code):
         self.header.setText(translate("BATHROOM ASSISTANCE", lang_code))
-        self.back_btn.setText(translate("Go Back", lang_code))
+        self.back_btn.setText(translate("GO BACK", lang_code))
         for card in self.cards:
-            card.update_language(lang_code)
+            if hasattr(card, 'title_label'):
+                card.title_label.setText(self._bathroom_translate(card.title, lang_code))
+            if hasattr(card, 'desc_label'):
+                card.desc_label.setText(self._bathroom_translate(card.description, lang_code))
 
 
 # ==========================================
@@ -1372,7 +1457,7 @@ class YesNoPage(QFrame):
 
     def update_language(self, lang_code):
         self.resp_title.setText(translate("CHOOSE ANSWER", lang_code))
-        self.back_btn_resp.setText(translate("Go Back", lang_code))
+        self.back_btn_resp.setText(translate("GO BACK", lang_code))
         self.yes_btn.setText(translate("CONFIRM", lang_code))
         self.no_btn.setText(translate("CONFIRM", lang_code))
         self.yes_lbl.setText(translate("YES", lang_code))
@@ -1386,7 +1471,7 @@ class ClockPage(QFrame):
     def __init__(self, app):
         super().__init__()
         self.app = app
-        self.current_lang = "en"
+        self.current_lang = selected_language
         self.setStyleSheet("background-color: #F0F8F7;")
 
         main_v = QVBoxLayout(self)
@@ -1617,7 +1702,7 @@ class WellBeingApp(QWidget):
         self.setWindowTitle("My Daily Well-Being")
         self.active_alarm_time = None
         self.timer_seconds_remaining = 0
-        self._current_lang = "en"   # track active language globally
+        self._current_lang = selected_language   # track active language globally
         self.sound_effect = QSoundEffect()
         self.sound_effect.setLoopCount(10)
         if os.path.exists("assets/alarm.wav"):

@@ -247,7 +247,7 @@ class CommBox(QFrame):
         if not self.hide_title and hasattr(self, 'title_label'):
             self.title_label.setText(translate(self.title, lang_code))
         if hasattr(self, 'desc_label'):
-            self.desc_label.setText(translate(self.description, lang_code))
+            self.desc_label.setText(translate(self.description.upper(), lang_code))
         if hasattr(self, 'btn'):
             self.btn.setText(translate("TALK WITH US", lang_code))
         if self.is_bell:

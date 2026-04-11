@@ -1,5 +1,8 @@
 import sys
 import os
+import queue
+import threading
+import traceback
 from PyQt6.QtWidgets import (QApplication, QWidget, QGridLayout,
                              QVBoxLayout, QHBoxLayout, QLabel, QFrame,
                              QPushButton, QMessageBox, QStackedWidget, QTimeEdit,
@@ -8,6 +11,11 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QGridLayout,
 from PyQt6.QtGui import QFont, QPixmap, QColor, QPainter, QPainterPath
 from PyQt6.QtCore import Qt, QDate, QTimer, QTime, QUrl, QRectF, QPropertyAnimation, QEasingCurve
 from PyQt6.QtMultimedia import QSoundEffect
+import pyttsx3
+try:
+    import pythoncom
+except Exception:
+    pythoncom = None
 
 import json
 
@@ -54,6 +62,95 @@ def translate(text, lang_code):
         normalized = normalized.replace(ch, "")
     normalized = " ".join(normalized.split())
     return lang_map.get(text, lang_map.get(text.upper(), lang_map.get(normalized.upper(), text)))
+
+
+class SpeechService:
+    """Simple async TTS queue so UI interactions never block."""
+    def __init__(self):
+        self._queue = queue.Queue()
+        self._warned_missing_voice = set()
+        self._worker = threading.Thread(target=self._run, daemon=True)
+        self._worker.start()
+
+    def speak(self, text, lang_code, fallback_text=None, fallback_lang_code=None):
+        if text:
+            self._queue.put((text, lang_code, fallback_text, fallback_lang_code))
+
+    def _run(self):
+        if pythoncom is not None:
+            try:
+                pythoncom.CoInitialize()
+            except Exception:
+                pass
+
+        engine = None
+        while True:
+            text, lang_code, fallback_text, fallback_lang_code = self._queue.get()
+            try:
+                if engine is None:
+                    engine = pyttsx3.init()
+                requested_lang = lang_code or "en"
+                chosen_text = text
+                chosen_lang = requested_lang
+
+                has_voice = self._pick_voice(engine, requested_lang)
+                if not has_voice and fallback_text:
+                    fb_lang = fallback_lang_code or "en"
+                    if requested_lang not in self._warned_missing_voice:
+                        print(f"TTS: no voice found for '{requested_lang}'. Falling back to '{fb_lang}'.")
+                        self._warned_missing_voice.add(requested_lang)
+                    chosen_text = fallback_text
+                    chosen_lang = fb_lang
+                    self._pick_voice(engine, chosen_lang)
+
+                engine.setProperty("rate", 150 if chosen_lang == "th" else 170)
+                engine.stop()
+                engine.say(chosen_text)
+                engine.runAndWait()
+            except Exception as e:
+                print(f"TTS error: {e}")
+                traceback.print_exc()
+                engine = None
+            finally:
+                self._queue.task_done()
+
+    @staticmethod
+    def _pick_voice(engine, lang_code):
+        def _voice_lang_tokens(v):
+            tokens = []
+            try:
+                for entry in getattr(v, 'languages', []) or []:
+                    if isinstance(entry, (bytes, bytearray)):
+                        tokens.append(entry.decode(errors='ignore'))
+                    else:
+                        tokens.append(str(entry))
+            except Exception:
+                return ""
+            return " ".join(tokens).lower()
+
+        for voice in engine.getProperty("voices"):
+            voice_id = (getattr(voice, 'id', '') or '').lower()
+            voice_name = (getattr(voice, 'name', '') or '').lower()
+            voice_langs = _voice_lang_tokens(voice)
+            blob = f"{voice_id} {voice_name} {voice_langs}".lower()
+
+            if lang_code == "th":
+                if voice_id in {"th", "th-th"} or voice_name == "thai":
+                    engine.setProperty("voice", voice.id)
+                    return True
+                if "thai" in blob or "th-" in blob or "th_" in blob or "th-th" in blob:
+                    engine.setProperty("voice", voice.id)
+                    return True
+
+            if lang_code == "en":
+                if voice_id in {"en", "en-us", "en-gb"} or voice_name == "english":
+                    engine.setProperty("voice", voice.id)
+                    return True
+                if "english" in blob or "en-" in blob or "en_" in blob or "en-us" in blob or "en-gb" in blob:
+                    engine.setProperty("voice", voice.id)
+                    return True
+
+        return False
 
 
 # ==========================================
@@ -1063,11 +1160,12 @@ def big_screen_update_language(page, lang_code):
 # ==========================================
 class ScrollableCategoryPage(BasePage):
     def __init__(self, app, title, data_file, image_prefix, border_color, bg_fallback,
-                 back_page_index, translate_item_names=True):
+                 back_page_index, translate_item_names=True, speak_on_select=False):
         super().__init__(app, title)
         self.file_path = data_file
         self._back_page_index = back_page_index
         self._translate_item_names = translate_item_names
+        self._speak_on_select = speak_on_select
         self.items = self.load_items_from_json(self.file_path, selected_language)
         build_big_screen_page(self, self.items, image_prefix, border_color, bg_fallback)
 
@@ -1079,6 +1177,25 @@ class ScrollableCategoryPage(BasePage):
     def on_box_clicked(self, idx):
         self.current_index = idx
         update_big_screen_shared(self, idx)
+        if self._speak_on_select and hasattr(self.app, 'speak_label') and 0 <= idx < len(self._items):
+            lang = getattr(self.app, '_current_lang', 'en')
+            primary_item = self._items[idx]
+            primary_text = self.speech_text_for_item(primary_item, lang_code=lang)
+
+            fallback_text = None
+            fallback_lang = None
+            if lang == 'th':
+                en_items = getattr(self, '_items_by_language', {}).get('en')
+                if en_items and idx < len(en_items):
+                    fallback_text = self.speech_text_for_item(en_items[idx], lang_code='en')
+                    fallback_lang = 'en'
+
+            self.app.speak_label(
+                primary_text,
+                lang_code=lang,
+                fallback_text=fallback_text,
+                fallback_lang_code=fallback_lang,
+            )
         hbar = self.scroll_area.horizontalScrollBar()
         if hbar is not None:
             hbar.setValue(idx * self.total_step)
@@ -1092,6 +1209,9 @@ class ScrollableCategoryPage(BasePage):
 
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
+
+    def speech_text_for_item(self, item_text, lang_code=None):
+        return item_text
 
     def update_language(self, lang_code):
         super().update_language(lang_code)
@@ -1113,6 +1233,7 @@ class FoodPage(ScrollableCategoryPage):
             bg_fallback="#FDEBD0",
             back_page_index=PAGE_FOOD,
             translate_item_names=False,
+            speak_on_select=False,
         )
 
 
@@ -1130,7 +1251,14 @@ class FeelingPage(ScrollableCategoryPage):
             bg_fallback="#F9E79F",
             back_page_index=PAGE_FEELING,
             translate_item_names=True,
+            speak_on_select=True,
         )
+
+    def speech_text_for_item(self, item_text, lang_code=None):
+        lang = lang_code or getattr(self.app, '_current_lang', 'en')
+        if lang == 'th':
+            return f"ฉันรู้สึก {item_text}"
+        return f"I feel {item_text.lower()}"
 
 
 # ==========================================
@@ -1147,6 +1275,7 @@ class PositionPage(ScrollableCategoryPage):
             bg_fallback="#D6EAF8",
             back_page_index=PAGE_POSITION,
             translate_item_names=True,
+            speak_on_select=True,
         )
 
 
@@ -1164,6 +1293,7 @@ class EntertainmentPage(ScrollableCategoryPage):
             bg_fallback="#D5F5E3",
             back_page_index=PAGE_ENTERTAINMENT,
             translate_item_names=False,
+            speak_on_select=False,
         )
 
 
@@ -1219,6 +1349,22 @@ class RecommendPage(BasePage):
         self.current_index = idx
         self._highlight_box(idx)
         self._update_recommend_big_screen(idx)
+        if 0 <= idx < len(self._items):
+            lang = getattr(self.app, '_current_lang', 'en')
+            primary_text = self._items[idx]
+            fallback_text = None
+            fallback_lang = None
+            if lang == 'th':
+                en_items = getattr(self, '_items_by_language', {}).get('en')
+                if en_items and idx < len(en_items):
+                    fallback_text = en_items[idx]
+                    fallback_lang = 'en'
+            self.app.speak_label(
+                primary_text,
+                lang_code=lang,
+                fallback_text=fallback_text,
+                fallback_lang_code=fallback_lang,
+            )
         hbar = self.scroll_area.horizontalScrollBar()
         if hbar is not None:
             hbar.setValue(idx * self.total_step)
@@ -1343,6 +1489,18 @@ class BathroomPage(QFrame):
 
         emoji = emoji_map.get(t, "✨")
         lang = getattr(self.app, '_current_lang', 'en')
+        primary_text = self._bathroom_translate(t, lang)
+        fallback_text = None
+        fallback_lang = None
+        if lang == 'th':
+            fallback_text = translate(t, 'en')
+            fallback_lang = 'en'
+        self.app.speak_label(
+            primary_text,
+            lang_code=lang,
+            fallback_text=fallback_text,
+            fallback_lang_code=fallback_lang,
+        )
 
         self.app.fullscreen_item_page.show_bathroom_item(
             item_name=self._bathroom_translate(t, lang),
@@ -1444,6 +1602,19 @@ class YesNoPage(QFrame):
         return card, btn, t_lbl
 
     def show_result(self, choice):
+        lang = getattr(self.app, '_current_lang', 'en')
+        primary_text = translate(choice, lang)
+        fallback_text = None
+        fallback_lang = None
+        if lang == 'th':
+            fallback_text = choice
+            fallback_lang = 'en'
+        self.app.speak_label(
+            primary_text,
+            lang_code=lang,
+            fallback_text=fallback_text,
+            fallback_lang_code=fallback_lang,
+        )
         self.resp_title.hide()
         self.back_btn_resp.hide()
         self.yes_card.hide()
@@ -1728,6 +1899,7 @@ class WellBeingApp(QWidget):
         self.active_alarm_time = None
         self.timer_seconds_remaining = 0
         self._current_lang = selected_language
+        self.speech = SpeechService()
         self.sound_effect = QSoundEffect()
         self.sound_effect.setLoopCount(10)
         if os.path.exists("assets/alarm.wav"):
@@ -1821,6 +1993,10 @@ class WellBeingApp(QWidget):
         is_emergency = "Emergency" in text or "pain" in text.lower()
         self.alert_page.set_alert_style(text, is_emergency)
         self.stack.setCurrentIndex(PAGE_ALERT)
+
+    def speak_label(self, text, lang_code=None, fallback_text=None, fallback_lang_code=None):
+        lang = lang_code or self._current_lang
+        self.speech.speak(text, lang, fallback_text=fallback_text, fallback_lang_code=fallback_lang_code)
 
     def update_language(self, lang_code):
         self._current_lang = lang_code

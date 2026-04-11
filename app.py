@@ -1,7 +1,7 @@
 import sys
 import os
-from PyQt6.QtWidgets import (QApplication, QWidget, QGridLayout, 
-                             QVBoxLayout, QHBoxLayout, QLabel, QFrame, 
+from PyQt6.QtWidgets import (QApplication, QWidget, QGridLayout,
+                             QVBoxLayout, QHBoxLayout, QLabel, QFrame,
                              QPushButton, QMessageBox, QStackedWidget, QTimeEdit,
                              QGraphicsDropShadowEffect, QScrollArea, QScroller, QSizePolicy,
                              QGraphicsOpacityEffect)
@@ -13,6 +13,7 @@ from PyQt6.QtMultimedia import QSoundEffect
 # HARDCODED TRANSLATION DICTIONARY
 # ==========================================
 THAI_TRANSLATIONS = {
+    # --- Main menu & headers ---
     "MY DAILY WELL-BEING": "ความเป็นอยู่ที่ดีของฉัน",
     "FOOD": "อาหาร",
     "Request food or specify meal type.": "ขออาหารหรือระบุเมนู",
@@ -34,11 +35,21 @@ THAI_TRANSLATIONS = {
     "Press to alert a staff member immediately.": "กดเพื่อแจ้งเจ้าหน้าที่ทันที",
     "CALL NOW": "เรียกเลย",
     "TALK WITH US": "พูดคุยกับเรา",
+
+    # --- Sub-page headers ---
     "FOOD MENU": "เมนูอาหาร",
     "FEELING & MOOD": "ความรู้สึกและอารมณ์",
     "BATHROOM ASSISTANCE": "ความช่วยเหลือห้องน้ำ",
     "RECOMMENDATIONS": "คำแนะนำ",
+
+    # --- Common buttons ---
     "Go Back": "ย้อนกลับ",
+    "SELECT": "เลือก",
+    "CONFIRM": "ยืนยัน",
+    "CANCEL": "ยกเลิก",
+    "TURN OFF": "ปิด",
+
+    # --- Bathroom options ---
     "TOILET": "เข้าห้องน้ำ",
     "I need to use the toilet.": "ฉันต้องการเข้าห้องน้ำ",
     "SHOWER": "อาบน้ำ",
@@ -51,10 +62,13 @@ THAI_TRANSLATIONS = {
     "I need to change the diaper.": "ฉันต้องการเปลี่ยนผ้าอ้อม",
     "GROOMING": "จัดแต่งทรงผม",
     "I need help with hair or shaving.": "ฉันต้องการความช่วยเหลือเรื่องทรงผมหรือโกนหนวด",
+
+    # --- Yes / No page ---
     "CHOOSE ANSWER": "เลือกคำตอบ",
     "YES": "ใช่",
     "NO": "ไม่ใช่",
-    "CONFIRM": "ยืนยัน",
+
+    # --- Clock page ---
     "CLOCK SETTINGS": "ตั้งค่าเวลา",
     "ALARM": "นาฬิกาปลุก",
     "TIMER": "จับเวลา",
@@ -62,13 +76,210 @@ THAI_TRANSLATIONS = {
     "Tap arrows to set duration": "แตะลูกศรเพื่อตั้งเวลา",
     "SET ALARM": "ตั้งปลุก",
     "START TIMER": "เริ่มจับเวลา",
-    "CANCEL": "ยกเลิก",
     "Alarm scheduled": "ตั้งนาฬิกาปลุกแล้ว",
     "Rings once — tap bell to dismiss": "ดังครั้งเดียว — แตะกระดิ่งเพื่อปิด",
     "Edit time": "แก้ไขเวลา",
     "Cancel alarm": "ยกเลิกการปลุก",
-    "SELECT": "เลือก",
+
+    # --- Alert / timer ---
+    "ALARM!": "เสียงปลุก!",
+    "TIMER FINISHED!": "หมดเวลาแล้ว!",
+    "Cancel Timer": "ยกเลิกตัวจับเวลา",
+
+    # --- Welcome page ---
+    "Good morning, Mr. K.D 👋": "อรุณสวัสดิ์ คุณ K.D 👋",
+    "Welcome to your daily well-being check-in": "ยินดีต้อนรับสู่การเช็คอินสุขภาพประจำวัน",
+    "How are you feeling today?": "วันนี้คุณรู้สึกอย่างไรบ้าง?",
+    "Continue to Menu ➜": "ไปที่เมนูหลัก ➜",
+
+    # --- Mood labels ---
+    "Great": "ดีมาก",
+    "Good": "ดี",
+    "Okay": "พอใช้",
+    "Not great": "ไม่ค่อยดี",
+    "In pain": "เจ็บปวด",
+
+    # --- Mood reply messages ---
+    "You look wonderful today! 😊": "วันนี้คุณดูดีมากเลย! 😊",
+    "Glad to hear it! 😊": "ดีใจที่ได้ยินเช่นนั้น! 😊",
+    "We are here for you. 💚": "เราอยู่เคียงข้างคุณเสมอ 💚",
+    "Let us help you feel better. 🤝": "ขอช่วยให้คุณรู้สึกดีขึ้นนะ 🤝",
+    "Staff will be notified right away. 🔔": "เจ้าหน้าที่จะได้รับแจ้งทันที 🔔",
+
+    # --- Position & Comfort items ---
+    "Adjust Bed": "ปรับเตียง",
+    "Pull Me Up": "พยุงตัวขึ้น",
+    "Support Right Arm": "พยุงแขนขวา",
+    "Turn Me to My Side": "พลิกตัวตะแคง",
+    "Fix Pillows/Cushions": "จัดหมอน/เบาะ",
+    "Too Hot / Too Cold": "ร้อนเกินไป / เย็นเกินไป",
+    "Transfer to Wheelchair": "ย้ายไปรถเข็น",
+    "Transfer to Bed": "ย้ายขึ้นเตียง",
+    "Transfer to Commode/Toilet": "ย้ายไปโถสุขภัณฑ์",
+    "Move to Recliner": "ย้ายไปเก้าอี้เอนหลัง",
+
+    # --- Feeling items ---
+    "Happiness": "ความสุข",
+    "Joy": "ปิติยินดี",
+    "Painful": "เจ็บปวด",
+    "Gratitude": "ความกตัญญู",
+    "Relief": "โล่งอก",
+    "Pride": "ความภาคภูมิใจ",
+    "Confidence": "ความมั่นใจ",
+    "Hope": "ความหวัง",
+    "Optimism": "มองโลกในแง่ดี",
+    "Excitement": "ตื่นเต้น",
+    "Enthusiasm": "กระตือรือร้น",
+    "Elation": "ปลาบปลื้ม",
+    "Bliss": "สุขใจ",
+    "Euphoria": "ปีติสุข",
+    "Amusement": "สนุกสนาน",
+    "Love": "ความรัก",
+    "Fondness": "ความชอบพอ",
+    "Caring": "ห่วงใย",
+    "Compassion": "ความเห็นอกเห็นใจ",
+    "Empathy": "การเข้าใจความรู้สึกผู้อื่น",
+    "Sympathy": "ความเห็นใจ",
+    "Tenderness": "อ่อนโยน",
+    "Attachment": "ความผูกพัน",
+    "Trust": "ความไว้วางใจ",
+    "Admiration": "ชื่นชม",
+    "Respect": "เคารพ",
+    "Sadness": "เศร้า",
+    "Unhappiness": "ไม่มีความสุข",
+    "Sorrow": "โศกเศร้า",
+    "Grief": "เสียใจ",
+    "Depression": "ซึมเศร้า",
+    "Despair": "สิ้นหวัง",
+    "Hopelessness": "หมดหวัง",
+    "Loneliness": "โดดเดี่ยว",
+    "Heartbreak": "หัวใจสลาย",
+    "Disappointment": "ผิดหวัง",
+    "Regret": "เสียใจ/เสียดาย",
+    "Guilt": "รู้สึกผิด",
+    "Shame": "อับอาย",
+    "Embarrassment": "ขายหน้า",
+    "Insecurity": "ไม่มั่นใจ",
+    "Worthlessness": "ไร้คุณค่า",
+    "Neglect": "ถูกทอดทิ้ง",
+    "Hurt": "เจ็บใจ",
+    "Anger": "โกรธ",
+    "Annoyance": "รำคาญ",
+    "Irritation": "หงุดหงิด",
+    "Frustration": "หัวร้อน",
+    "Aggravation": "ขุ่นเคือง",
+    "Resentment": "โกรธแค้น",
+    "Bitterness": "ขมขื่น",
+    "Hatred": "เกลียดชัง",
+    "Rage": "พิโรธ",
+    "Fury": "เดือดดาล",
+    "Hostility": "เป็นปฏิปักษ์",
+    "Jealousy": "หึงหวง",
+    "Envy": "อิจฉา",
+    "Fear": "กลัว",
+    "Anxiety": "วิตกกังวล",
+    "Worry": "เป็นห่วง",
+    "Nervousness": "ประหม่า",
+    "Stress": "เครียด",
+    "Panic": "ตื่นตระหนก",
+    "Terror": "สยดสยอง",
+    "Dread": "หวาดกลัว",
+    "Apprehension": "กังวลใจ",
+    "Unease": "ไม่สบายใจ",
+    "Disgust": "รังเกียจ",
+    "Revulsion": "สะอิดสะเอียน",
+    "Contempt": "경멸 / 경시",
+    "Loathing": "ขยะแขยง",
+    "Surprise": "ประหลาดใจ",
+    "Amazement": "ตะลึงพรึงเพริด",
+    "Astonishment": "ตกใจ",
+    "Shock": "ช็อค",
+    "Curiosity": "อยากรู้อยากเห็น",
+    "Interest": "สนใจ",
+    "Intrigue": "ถูกดึงดูด",
+    "Fascination": "หลงใหล",
+    "Boredom": "เบื่อ",
+    "Apathy": "เฉยเมย",
+    "Indifference": "ไม่แยแส",
+    "Confusion": "สับสน",
+    "Perplexity": "งุนงง",
+    "Doubt": "สงสัย",
+    "Uncertainty": "ไม่แน่ใจ",
+    "Calmness": "สงบ",
+    "Peacefulness": "สันติ",
+    "Relaxation": "ผ่อนคลาย",
+    "Serenity": "สงบเงียบ",
+    "Awe": "ตื้นตัน",
+    "Wonder": "อัศจรรย์",
+    "Inspiration": "แรงบันดาลใจ",
+    "Anticipation": "คาดหวัง",
+    "Eagerness": "กระตือรือร้น",
+    "Overwhelm": "ท่วมท้น",
+    "Restlessness": "กระสับกระส่าย",
+    "Nostalgia": "คิดถึงอดีต",
+    "Melancholy": "เหงาหงอย",
+    "Skepticism": "ไม่เชื่อง่าย",
+    "Suspicion": "ระแวง",
+    "Acceptance": "ยอมรับ",
+    "Forgiveness": "การให้อภัย",
+    "Determination": "มุ่งมั่น",
+    "Motivation": "แรงจูงใจ",
+    "Fulfillment": "พึงพอใจ",
+    "Disconnection": "รู้สึกห่างเหิน",
+    "Alienation": "แปลกแยก",
+
+    # --- Recommend items ---
+    "I need my glasses": "ฉันต้องการแว่นตา",
+    "I need my hearing aid": "ฉันต้องการเครื่องช่วยฟัง",
+    "My phone needs charging": "โทรศัพท์ของฉันต้องชาร์จ",
+    "I dropped something": "ฉันทำของหล่น",
+    "I need more light": "ฉันต้องการแสงสว่างเพิ่ม",
+    "I need less light": "ฉันต้องการแสงน้อยลง",
+    "Please turn off the TV": "กรุณาปิดทีวี",
+    "Please turn on the fan": "กรุณาเปิดพัดลม",
+    "Please turn off the fan": "กรุณาปิดพัดลม",
+    "I need hand sanitizer": "ฉันต้องการเจลล้างมือ",
+    "I need tissues": "ฉันต้องการกระดาษทิชชู",
+    "I need lip balm": "ฉันต้องการลิปบาล์ม",
+    "My mouth is dry": "ปากของฉันแห้ง",
+    "I need to spit": "ฉันต้องการบ้วนน้ำลาย",
+    "Please clean my hands": "กรุณาทำความสะอาดมือให้ฉัน",
+    "I need my dentures": "ฉันต้องการฟันปลอม",
+    "Please remove my dentures": "กรุณาถอดฟันปลอมให้ฉัน",
+    "I want to see my family": "ฉันอยากพบครอบครัว",
+    "I want to see my friend": "ฉันอยากพบเพื่อน",
+    "Please ask visitor to leave": "กรุณาขอให้ผู้เยี่ยมออกไป",
+    "I want more visitors": "ฉันต้องการให้มีผู้เยี่ยมเพิ่ม",
+    "Please take my photo": "กรุณาถ่ายรูปให้ฉัน",
+    "Please contact my doctor": "กรุณาติดต่อแพทย์ของฉัน",
+    "I want to speak to a nurse": "ฉันต้องการพูดคุยกับพยาบาล",
+    "I cannot sleep": "ฉันนอนไม่หลับ",
+    "I need a sleep aid": "ฉันต้องการยานอนหลับ",
+    "Please be quiet": "กรุณาเงียบ",
+    "The light is bothering me": "แสงทำให้ฉันรำคาญ",
+    "I want to nap": "ฉันอยากงีบหลับ",
+    "I feel well rested": "ฉันรู้สึกพักผ่อนเต็มที่แล้ว",
+    "I had a bad dream": "ฉันฝันร้าย",
+    "I need my night medication": "ฉันต้องการยากลางคืน",
+    "Please speak slowly": "กรุณาพูดช้าๆ",
+    "Please repeat that": "กรุณาพูดซ้ำอีกครั้ง",
+    "I do not understand": "ฉันไม่เข้าใจ",
+    "Please call my family": "กรุณาโทรหาครอบครัวของฉัน",
+    "I need a pen and paper": "ฉันต้องการปากกาและกระดาษ",
+    "Please write it down": "กรุณาเขียนให้ฉันด้วย",
+    "Please show me a picture": "กรุณาให้ฉันดูรูปภาพ",
+    "I want to make a phone call": "ฉันต้องการโทรศัพท์",
+    "I want to send a message": "ฉันต้องการส่งข้อความ",
+    "Please read this to me": "กรุณาอ่านให้ฉันฟัง",
+    "I need an interpreter": "ฉันต้องการล่าม",
+    "Please be patient with me": "กรุณาอดทนกับฉันด้วย",
+    "My bed is uncomfortable": "เตียงของฉันไม่สบาย",
+    "I need my blanket": "ฉันต้องการผ้าห่ม",
+    "Please raise my bed": "กรุณายกเตียงขึ้น",
+    "Please lower my bed": "กรุณาลดเตียงลง",
+    "I need more pillows": "ฉันต้องการหมอนเพิ่ม",
 }
+
 
 def translate(text, lang_code):
     if not text:
@@ -76,6 +287,7 @@ def translate(text, lang_code):
     if lang_code == "en":
         return text
     return THAI_TRANSLATIONS.get(text, text)
+
 
 # ==========================================
 # COMMBOX
@@ -98,7 +310,6 @@ class CommBox(QFrame):
         self.hide_title = hide_title
         self.setFrameShape(QFrame.Shape.NoFrame)
 
-        # ---- FIX: make whole card clickable whenever there is a callback ----
         if is_bell or not show_btn or callback:
             self.setCursor(Qt.CursorShape.PointingHandCursor)
 
@@ -228,9 +439,6 @@ class CommBox(QFrame):
             self.btn.setFixedHeight(45)
             self.btn.setStyleSheet(
                 "QPushButton { background-color: #4D908E; color: white; border-radius: 12px; font-weight: bold; border: none; }")
-            # Button click still works but we don't need it to fire separately
-            # since the whole card is now clickable via mousePressEvent.
-            # We keep it connected so it still works if tapped directly.
             self.btn.clicked.connect(self.handle_click)
             bottom_layout.addWidget(self.btn)
 
@@ -257,7 +465,6 @@ class CommBox(QFrame):
                 self.callback("BELL")
 
         elif not self.show_btn:
-            # Bathroom-style cards (no button, picture cards)
             if self.hide_title and self.use_picture and hasattr(self, 'pic_frame'):
                 safe_path = self.media_file.replace('\\', '/')
                 self.pic_frame.setStyleSheet(
@@ -273,7 +480,6 @@ class CommBox(QFrame):
                 self.callback(self.title)
 
         elif self.show_btn and self.callback:
-            # ---- FIX: whole-card click for the 8 main menu cards ----
             self.top_half.setStyleSheet(
                 "background-color: #BDBDBD; border-top-left-radius: 20px; border-top-right-radius: 20px; border: none;")
             self.bottom_half.setStyleSheet(
@@ -437,6 +643,7 @@ class WelcomePage(QFrame):
     def __init__(self, app):
         super().__init__()
         self.app = app
+        self.current_lang = "en"
         self.setStyleSheet("background-color: #F0F8F7;")
 
         main = QVBoxLayout(self)
@@ -517,6 +724,8 @@ class WelcomePage(QFrame):
             ("😣", "In pain",   "#EBDEF0", "#76448A"),
         ]
         self.mood_buttons = []
+        self.mood_text_labels = []   # store the text QLabel for each mood button
+
         for emoji, label, bg, fg in self.mood_data:
             btn_frame = QFrame()
             btn_frame.setStyleSheet(
@@ -541,10 +750,12 @@ class WelcomePage(QFrame):
             bv.addWidget(t_lbl)
             btn_frame._bg = bg
             btn_frame._fg = fg
-            btn_frame._label = label
+            btn_frame._label = label         # keep the EN key for logic
+            btn_frame._text_lbl = t_lbl      # reference to update language
             btn_frame.mousePressEvent = lambda e, f=btn_frame: self.select_mood(f)
             moods_h.addWidget(btn_frame)
             self.mood_buttons.append(btn_frame)
+            self.mood_text_labels.append(t_lbl)
 
         main.addWidget(moods_frame)
         main.addSpacing(20)
@@ -700,7 +911,9 @@ class WelcomePage(QFrame):
                 "background-color: white; border: 2px solid #8FC8C2; border-radius: 20px;")
         frame.setStyleSheet(
             f"background-color: {frame._bg}; border: 2px solid {frame._fg}; border-radius: 20px;")
-        self.reply_label.setText(replies.get(frame._label, ""))
+
+        reply_key = replies.get(frame._label, "")
+        self.reply_label.setText(translate(reply_key, self.current_lang))
 
         if frame._label == "In pain":
             QTimer.singleShot(1000, lambda: QMessageBox.warning(
@@ -710,6 +923,20 @@ class WelcomePage(QFrame):
             QTimer.singleShot(1000, lambda: self.app.stack.setCurrentIndex(1))
 
     def update_language(self, lang_code):
+        self.current_lang = lang_code
+        # greeting
+        self.name_label.setText(translate("Good morning, Mr. K.D 👋", lang_code))
+        self.sub_label.setText(translate("Welcome to your daily well-being check-in", lang_code))
+        # question
+        self.question_label.setText(translate("How are you feeling today?", lang_code))
+        # continue button
+        self.continue_btn.setText(translate("Continue to Menu ➜", lang_code))
+        # cancel timer button
+        self.cancel_timer_btn.setText("✕ " + translate("Cancel Timer", lang_code))
+        # mood labels
+        for btn_frame in self.mood_buttons:
+            btn_frame._text_lbl.setText(translate(btn_frame._label, lang_code))
+        # alarm banner
         self.alarm_scheduled_label.setText(translate("Alarm scheduled", lang_code))
         self.alarm_sub_label.setText(translate("Rings once — tap bell to dismiss", lang_code))
         self.change_time_btn.setText(translate("Edit time", lang_code))
@@ -889,6 +1116,7 @@ def build_big_screen_page(page, items, image_prefix, border_color, bg_fallback):
     page._image_prefix = image_prefix
     page._items = items
     page._bg_fallback = bg_fallback
+    page._box_widgets = []   # store box + label pairs for language update
 
     for i, item_name in enumerate(items):
         box = QPushButton(page.container_widget)
@@ -906,6 +1134,7 @@ def build_big_screen_page(page, items, image_prefix, border_color, bg_fallback):
         """)
         box.clicked.connect(lambda checked, idx=i: page.on_box_clicked(idx))
         page.h_layout.addWidget(box)
+        page._box_widgets.append((item_name, label))   # (original EN name, label widget)
 
     page.scroll_area.setWidget(page.container_widget)
     page.page_layout.insertWidget(2, page.scroll_area)
@@ -950,7 +1179,8 @@ def update_big_screen_shared(page, index):
         page.big_screen.setStyleSheet("background-color: transparent; border: none;")
     else:
         page.big_screen.setPixmap(QPixmap())
-        page.big_screen.setText(page._items[index])
+        lang = getattr(page.app, '_current_lang', 'en')
+        page.big_screen.setText(translate(page._items[index], lang))
         page.big_screen.setStyleSheet(
             f"background-color: {page._bg_fallback}; color: #2C4C49; font-size: 36px; "
             f"font-weight: bold; border-radius: 25px; border: none; padding: 20px;")
@@ -966,8 +1196,10 @@ def open_fullscreen_for_page(page, idx, back_page_index):
         "position":      "💪",
     }
     emoji = emoji_map.get(page._image_prefix, "✨")
+    lang = getattr(page.app, '_current_lang', 'en')
+    display_name = translate(page._items[idx], lang)
     page.app.fullscreen_item_page.show_item(
-        item_name=page._items[idx],
+        item_name=display_name,
         item_index=idx,
         image_prefix=page._image_prefix,
         bg_fallback=page._bg_fallback,
@@ -975,6 +1207,12 @@ def open_fullscreen_for_page(page, idx, back_page_index):
         back_index=back_page_index,
     )
     page.app.stack.setCurrentIndex(11)
+
+
+def big_screen_update_language(page, lang_code):
+    """Update the thumbnail label text for scrollable pages."""
+    for original_name, label in page._box_widgets:
+        label.setText(translate(original_name, lang_code))
 
 
 # ==========================================
@@ -1041,6 +1279,8 @@ class FoodPage(BasePage):
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
 
+    # Food names are intentionally NOT translated (as per user request)
+
 
 # ==========================================
 # FEELING PAGE (index 3)
@@ -1098,6 +1338,10 @@ class FeelingPage(BasePage):
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
 
+    def update_language(self, lang_code):
+        super().update_language(lang_code)
+        big_screen_update_language(self, lang_code)
+
 
 # ==========================================
 # POSITION & COMFORT PAGE (index 4)
@@ -1139,6 +1383,10 @@ class PositionPage(BasePage):
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
 
+    def update_language(self, lang_code):
+        super().update_language(lang_code)
+        big_screen_update_language(self, lang_code)
+
 
 # ==========================================
 # ENTERTAINMENT PAGE (index 7)
@@ -1175,6 +1423,8 @@ class EntertainmentPage(BasePage):
 
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
+
+    # Entertainment channel names intentionally NOT translated (as per user request)
 
 
 # ==========================================
@@ -1225,6 +1475,10 @@ class RecommendPage(BasePage):
 
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
+
+    def update_language(self, lang_code):
+        super().update_language(lang_code)
+        big_screen_update_language(self, lang_code)
 
 
 # ==========================================
@@ -1285,10 +1539,11 @@ class BathroomPage(QFrame):
             "CLOTHES": "👕", "TEETH": "🧸", "GROOMING": "💈",
         }
         emoji = emoji_map.get(t, "✨")
+        lang = getattr(self.app, '_current_lang', 'en')
 
         self.app.fullscreen_item_page.show_bathroom_item(
-            item_name=t,
-            description=d,
+            item_name=translate(t, lang),
+            description=translate(d, lang),
             media_file=media_file,
             bg_color=c,
             emoji_fallback=emoji,
@@ -1648,7 +1903,7 @@ class AlertPage(QFrame):
         self.app.stack.setCurrentIndex(1)
 
     def update_language(self, lang_code):
-        self.stop_btn.setText(translate("CANCEL", lang_code))
+        self.stop_btn.setText(translate("TURN OFF", lang_code))
 
 
 # ==========================================
@@ -1660,6 +1915,7 @@ class WellBeingApp(QWidget):
         self.setWindowTitle("My Daily Well-Being")
         self.active_alarm_time = None
         self.timer_seconds_remaining = 0
+        self._current_lang = "en"   # track active language globally
         self.sound_effect = QSoundEffect()
         self.sound_effect.setLoopCount(10)
         if os.path.exists("assets/alarm.wav"):
@@ -1755,9 +2011,14 @@ class WellBeingApp(QWidget):
         self.stack.setCurrentIndex(10)
 
     def update_language(self, lang_code):
+        self._current_lang = lang_code
         for page in self.pages:
             if hasattr(page, 'update_language'):
                 page.update_language(lang_code)
+        # Refresh the big screen display on whichever scrollable page is currently shown
+        current_page = self.stack.currentWidget()
+        if hasattr(current_page, 'current_index') and hasattr(current_page, 'big_screen'):
+            update_big_screen_shared(current_page, current_page.current_index)
 
 
 # ==========================================

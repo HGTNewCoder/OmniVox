@@ -115,7 +115,10 @@ def translate(text, lang_code):
     if not text:
         return ""
     return translations_dict.get(lang_code, {}).get(text, text)
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 
 # ==========================================
 # COMMBOX
@@ -453,7 +456,12 @@ class FullScreenItemPage(QFrame):
     def _confirm_selection(self):
         self.bottom_bar.setStyleSheet(
             "background-color: #D5F5E3; border-radius: 0px; border: none;")
-        QTimer.singleShot(400, lambda: self.app.stack.setCurrentIndex(self._back_index))
+        QTimer.singleShot(400, self._finalize_selection)
+
+    def _finalize_selection(self):
+        self.app.stack.setCurrentIndex(self._back_index)
+        self.bottom_bar.setStyleSheet(
+            "background-color: white; border-radius: 0px; border: none;")
 
     def update_language(self, lang_code):
         self.back_btn.setText(translate("GO BACK", lang_code))
@@ -1019,6 +1027,11 @@ def update_big_screen_shared(page, index):
     if page._is_rendering:
         return
     page._is_rendering = True
+    
+    if not hasattr(page, '_items') or not page._items or index >= len(page._items):
+        page._is_rendering = False
+        return
+
     w = page.big_screen.width()
     h = page.big_screen.height()
     if w <= 0 or h <= 0:
@@ -1669,12 +1682,14 @@ class ClockPage(QFrame):
 
     def switch_clock_mode(self, mode):
         if mode == "ALARM":
+            self.btn_alarm_mode.setChecked(True)
             self.btn_timer_mode.setChecked(False)
             self.start_btn.setText(translate("SET ALARM", self.current_lang))
             # FIX 9: key matches EXTRA_TRANSLATIONS exactly
             self.mode_label.setText(translate("Tap arrows to set alarm", self.current_lang))
             self.time_spinner.setTime(QTime.currentTime())
         else:
+            self.btn_timer_mode.setChecked(True)
             self.btn_alarm_mode.setChecked(False)
             self.start_btn.setText(translate("START TIMER", self.current_lang))
             self.mode_label.setText(translate("Tap arrows to set duration", self.current_lang))

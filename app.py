@@ -1,7 +1,7 @@
 import sys
 import os
-from PyQt6.QtWidgets import (QApplication, QWidget, QGridLayout, 
-                             QVBoxLayout, QHBoxLayout, QLabel, QFrame, 
+from PyQt6.QtWidgets import (QApplication, QWidget, QGridLayout,
+                             QVBoxLayout, QHBoxLayout, QLabel, QFrame,
                              QPushButton, QMessageBox, QStackedWidget, QTimeEdit,
                              QGraphicsDropShadowEffect, QScrollArea, QScroller, QSizePolicy,
                              QGraphicsOpacityEffect)
@@ -58,7 +58,7 @@ class CommBox(QFrame):
         self.hide_title = hide_title
         self.setFrameShape(QFrame.Shape.NoFrame)
 
-        if is_bell or not show_btn:
+        if is_bell or not show_btn or callback:
             self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.setStyleSheet("QFrame { border: none; border-radius: 20px; background-color: white; }")
@@ -206,6 +206,7 @@ class CommBox(QFrame):
                 f"background-color: {self.original_color}; border-radius: 20px; border: none;"))
             if self.callback:
                 self.callback("BELL")
+
         elif not self.show_btn:
             if self.hide_title and self.use_picture and hasattr(self, 'pic_frame'):
                 safe_path = self.media_file.replace('\\', '/')
@@ -220,6 +221,14 @@ class CommBox(QFrame):
             QTimer.singleShot(150, self.restore_colors)
             if self.callback:
                 self.callback(self.title)
+
+        elif self.show_btn and self.callback:
+            self.top_half.setStyleSheet(
+                "background-color: #BDBDBD; border-top-left-radius: 20px; border-top-right-radius: 20px; border: none;")
+            self.bottom_half.setStyleSheet(
+                "background-color: #E0E0E0; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; border: none;")
+            QTimer.singleShot(150, self.restore_colors)
+            self.callback(self.title)
 
     def restore_colors(self):
         if self.hide_title and self.use_picture and hasattr(self, 'pic_frame'):
@@ -253,15 +262,10 @@ class CommBox(QFrame):
 # PAGE 11: FULL SCREEN ITEM PAGE
 # ==========================================
 class FullScreenItemPage(QFrame):
-    """
-    Displays any selected item full-screen with its picture (or emoji fallback)
-    and the item name — exactly like the YES/NO confirmation screen.
-    back_index tells it which stack page to return to.
-    """
     def __init__(self, app):
         super().__init__()
         self.app = app
-        self._back_index = 1          # default: go back to main menu
+        self._back_index = 1
         self._image_prefix = ""
         self._item_index = 0
         self._item_name = ""
@@ -273,14 +277,12 @@ class FullScreenItemPage(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # ---- Image area (fills most of screen) ----
         self.image_label = QLabel()
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.image_label.setStyleSheet("background: transparent; border: none;")
         layout.addWidget(self.image_label, stretch=7)
 
-        # ---- Bottom bar: name + SELECT button + back ----
         self.bottom_bar = QFrame()
         self.bottom_bar.setFixedHeight(140)
         self.bottom_bar.setStyleSheet(
@@ -319,9 +321,6 @@ class FullScreenItemPage(QFrame):
 
         layout.addWidget(self.bottom_bar, stretch=0)
 
-    # ------------------------------------------------------------------
-    # Public API – called before switching to this page
-    # ------------------------------------------------------------------
     def show_item(self, item_name, item_index, image_prefix, bg_fallback, emoji_fallback, back_index):
         self._back_index = back_index
         self._image_prefix = image_prefix
@@ -334,7 +333,6 @@ class FullScreenItemPage(QFrame):
 
         image_path = f"assets/{image_prefix}_{item_index}.png"
         if os.path.exists(image_path):
-            # Fill the image area nicely
             pixmap = QPixmap(image_path)
             screen_w = self.app.width()
             screen_h = self.app.height() - self.bottom_bar.height()
@@ -345,7 +343,6 @@ class FullScreenItemPage(QFrame):
             y_off = (scaled.height() - screen_h) // 4
             cropped = scaled.copy(x_off, y_off, screen_w, screen_h)
 
-            # Rounded corners
             rounded = QPixmap(cropped.size())
             rounded.fill(Qt.GlobalColor.transparent)
             painter = QPainter(rounded)
@@ -362,7 +359,6 @@ class FullScreenItemPage(QFrame):
             self.setStyleSheet("background-color: #1a1a1a;")
             self.image_label.setStyleSheet("background: transparent; border: none;")
         else:
-            # Emoji / text fallback
             self.image_label.setPixmap(QPixmap())
             self.image_label.setText(emoji_fallback)
             self.image_label.setFont(QFont("Arial", 120))
@@ -374,7 +370,6 @@ class FullScreenItemPage(QFrame):
         self.app.stack.setCurrentIndex(self._back_index)
 
     def _confirm_selection(self):
-        # Flash green then go back
         self.bottom_bar.setStyleSheet(
             "background-color: #D5F5E3; border-radius: 0px; border: none;")
         QTimer.singleShot(400, lambda: self.app.stack.setCurrentIndex(self._back_index))
@@ -391,6 +386,7 @@ class WelcomePage(QFrame):
     def __init__(self, app):
         super().__init__()
         self.app = app
+        self.current_lang = "en"
         self.setStyleSheet("background-color: #F0F8F7;")
 
         main = QVBoxLayout(self)
@@ -420,7 +416,6 @@ class WelcomePage(QFrame):
         main.addWidget(self.greeting_frame)
         main.addSpacing(10)
 
-        # --- STATUS SECTION (ALARM & TIMER) ---
         self.status_container = QFrame()
         self.status_container.setStyleSheet("background: transparent; border: none;")
         status_v_layout = QVBoxLayout(self.status_container)
@@ -474,6 +469,8 @@ class WelcomePage(QFrame):
             ("😣", "In pain",   "#EBDEF0", "#76448A"),
         ]
         self.mood_buttons = []
+        self.mood_text_labels = []   # store the text QLabel for each mood button
+
         for emoji, label, bg, fg in self.mood_data:
             btn_frame = QFrame()
             btn_frame.setStyleSheet(
@@ -498,10 +495,12 @@ class WelcomePage(QFrame):
             bv.addWidget(t_lbl)
             btn_frame._bg = bg
             btn_frame._fg = fg
-            btn_frame._label = label
+            btn_frame._label = label         # keep the EN key for logic
+            btn_frame._text_lbl = t_lbl      # reference to update language
             btn_frame.mousePressEvent = lambda e, f=btn_frame: self.select_mood(f)
             moods_h.addWidget(btn_frame)
             self.mood_buttons.append(btn_frame)
+            self.mood_text_labels.append(t_lbl)
 
         main.addWidget(moods_frame)
         main.addSpacing(20)
@@ -657,7 +656,9 @@ class WelcomePage(QFrame):
                 "background-color: white; border: 2px solid #8FC8C2; border-radius: 20px;")
         frame.setStyleSheet(
             f"background-color: {frame._bg}; border: 2px solid {frame._fg}; border-radius: 20px;")
-        self.reply_label.setText(replies.get(frame._label, ""))
+
+        reply_key = replies.get(frame._label, "")
+        self.reply_label.setText(translate(reply_key, self.current_lang))
 
         if frame._label == "In pain":
             QTimer.singleShot(1000, lambda: QMessageBox.warning(
@@ -667,6 +668,20 @@ class WelcomePage(QFrame):
             QTimer.singleShot(1000, lambda: self.app.stack.setCurrentIndex(1))
 
     def update_language(self, lang_code):
+        self.current_lang = lang_code
+        # greeting
+        self.name_label.setText(translate("Good morning, Mr. K.D 👋", lang_code))
+        self.sub_label.setText(translate("Welcome to your daily well-being check-in", lang_code))
+        # question
+        self.question_label.setText(translate("How are you feeling today?", lang_code))
+        # continue button
+        self.continue_btn.setText(translate("Continue to Menu ➜", lang_code))
+        # cancel timer button
+        self.cancel_timer_btn.setText("✕ " + translate("Cancel Timer", lang_code))
+        # mood labels
+        for btn_frame in self.mood_buttons:
+            btn_frame._text_lbl.setText(translate(btn_frame._label, lang_code))
+        # alarm banner
         self.alarm_scheduled_label.setText(translate("ALARM SCHEDULED", lang_code))
         self.alarm_sub_label.setText(translate("RINGS ONCE — TAP BELL TO DISMISS", lang_code))
         self.change_time_btn.setText(translate("EDIT TIME", lang_code))
@@ -882,6 +897,7 @@ def build_big_screen_page(page, items, image_prefix, border_color, bg_fallback):
     page._image_prefix = image_prefix
     page._items = items
     page._bg_fallback = bg_fallback
+    page._box_widgets = []   # store box + label pairs for language update
 
     for i, item_name in enumerate(items):
         box = QPushButton(page.container_widget)
@@ -899,6 +915,7 @@ def build_big_screen_page(page, items, image_prefix, border_color, bg_fallback):
         """)
         box.clicked.connect(lambda checked, idx=i: page.on_box_clicked(idx))
         page.h_layout.addWidget(box)
+        page._box_widgets.append((item_name, label))   # (original EN name, label widget)
 
     page.scroll_area.setWidget(page.container_widget)
     page.page_layout.insertWidget(2, page.scroll_area)
@@ -943,7 +960,8 @@ def update_big_screen_shared(page, index):
         page.big_screen.setStyleSheet("background-color: transparent; border: none;")
     else:
         page.big_screen.setPixmap(QPixmap())
-        page.big_screen.setText(page._items[index])
+        lang = getattr(page.app, '_current_lang', 'en')
+        page.big_screen.setText(translate(page._items[index], lang))
         page.big_screen.setStyleSheet(
             f"background-color: {page._bg_fallback}; color: #2C4C49; font-size: 36px; "
             f"font-weight: bold; border-radius: 25px; border: none; padding: 20px;")
@@ -953,8 +971,10 @@ def update_big_screen_shared(page, index):
 def open_fullscreen_for_page(page, idx, back_page_index):
     """Helper: push the full-screen item page for any big-screen page."""
     emoji = emoji_map.get(page._image_prefix, "✨")
+    lang = getattr(page.app, '_current_lang', 'en')
+    display_name = translate(page._items[idx], lang)
     page.app.fullscreen_item_page.show_item(
-        item_name=page._items[idx],
+        item_name=display_name,
         item_index=idx,
         image_prefix=page._image_prefix,
         bg_fallback=page._bg_fallback,
@@ -962,6 +982,12 @@ def open_fullscreen_for_page(page, idx, back_page_index):
         back_index=back_page_index,
     )
     page.app.stack.setCurrentIndex(11)
+
+
+def big_screen_update_language(page, lang_code):
+    """Update the thumbnail label text for scrollable pages."""
+    for original_name, label in page._box_widgets:
+        label.setText(translate(original_name, lang_code))
 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
 # ==========================================
@@ -982,7 +1008,6 @@ class FoodPage(BasePage):
         self.current_index = idx
         update_big_screen_shared(self, idx)
         self.scroll_area.horizontalScrollBar().setValue(idx * self.total_step)
-        # Open full screen on second tap OR immediately — here we open immediately
         open_fullscreen_for_page(self, idx, back_page_index=2)
 
     def handle_scroll_update(self, value):
@@ -993,6 +1018,8 @@ class FoodPage(BasePage):
 
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
+
+    # Food names are intentionally NOT translated (as per user request)
 
 
 # ==========================================
@@ -1051,6 +1078,10 @@ class FeelingPage(BasePage):
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
 
+    def update_language(self, lang_code):
+        super().update_language(lang_code)
+        big_screen_update_language(self, lang_code)
+
 
 # ==========================================
 # POSITION & COMFORT PAGE (index 4)
@@ -1072,7 +1103,7 @@ class PositionPage(BasePage):
         self.current_index = idx
         update_big_screen_shared(self, idx)
         self.scroll_area.horizontalScrollBar().setValue(idx * self.total_step)
-        open_fullscreen_for_page(self, idx, back_page_index=7)
+        open_fullscreen_for_page(self, idx, back_page_index=4)
 
     def handle_scroll_update(self, value):
         index = round(value / self.total_step)
@@ -1082,6 +1113,10 @@ class PositionPage(BasePage):
 
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
+
+    def update_language(self, lang_code):
+        super().update_language(lang_code)
+        big_screen_update_language(self, lang_code)
 
 
 # ==========================================
@@ -1114,6 +1149,8 @@ class EntertainmentPage(BasePage):
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
 
+    # Entertainment channel names intentionally NOT translated (as per user request)
+
 
 # ==========================================
 # RECOMMEND PAGE (index 8)
@@ -1144,6 +1181,10 @@ class RecommendPage(BasePage):
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
 
+    def update_language(self, lang_code):
+        super().update_language(lang_code)
+        big_screen_update_language(self, lang_code)
+
 
 # ==========================================
 # BATHROOM PAGE (index 5)
@@ -1166,7 +1207,6 @@ class BathroomPage(QFrame):
         grid.setVerticalSpacing(60)
         grid.setContentsMargins(40, 10, 40, 10)
 
-        # Store structured data so we can pass image paths to full-screen page
         self.options_data = [
             ("TOILET",   "I need to use the toilet.",         "#AED6F1", "assets/toilet_pic.png",   0, 0),
             ("SHOWER",   "I would like to take a shower.",    "#A2D9CE", "assets/shower_pic.png",   0, 1),
@@ -1194,8 +1234,6 @@ class BathroomPage(QFrame):
         layout.addSpacing(20)
 
     def handle_bathroom_selection(self, choice):
-        """Show the full-screen item page for the chosen bathroom option."""
-        # Find the matching entry
         match = next((entry for entry in self.options_data if entry[0] == choice), None)
         if match is None:
             return
@@ -1203,17 +1241,11 @@ class BathroomPage(QFrame):
 
         # Determine emoji fallback
         emoji = emoji_map.get(t, "✨")
+        lang = getattr(self.app, '_current_lang', 'en')
 
-        # Build a temporary image prefix by stripping _pic.png/_pic.jpg
-        # so show_item() can try  <prefix>_0.png  etc.
-        # Since bathroom images are single named files (not indexed), we handle
-        # them directly: pass the media_file as the "image path" by using a
-        # special prefix trick — we store the full path in image_prefix and
-        # index 0, then show_item checks for <prefix>_<index>.png which won't
-        # match, so we instead override with the direct file approach below.
         self.app.fullscreen_item_page.show_bathroom_item(
-            item_name=t,
-            description=d,
+            item_name=translate(t, lang),
+            description=translate(d, lang),
             media_file=media_file,
             bg_color=c,
             emoji_fallback=emoji,
@@ -1573,7 +1605,7 @@ class AlertPage(QFrame):
         self.app.stack.setCurrentIndex(1)
 
     def update_language(self, lang_code):
-        self.stop_btn.setText(translate("CANCEL", lang_code))
+        self.stop_btn.setText(translate("TURN OFF", lang_code))
 
 
 # ==========================================
@@ -1585,6 +1617,7 @@ class WellBeingApp(QWidget):
         self.setWindowTitle("My Daily Well-Being")
         self.active_alarm_time = None
         self.timer_seconds_remaining = 0
+        self._current_lang = "en"   # track active language globally
         self.sound_effect = QSoundEffect()
         self.sound_effect.setLoopCount(10)
         if os.path.exists("assets/alarm.wav"):
@@ -1629,7 +1662,6 @@ class WellBeingApp(QWidget):
         self.alert_page = AlertPage(self)
         self.stack.addWidget(self.alert_page)          # index 10
 
-        # ---- NEW: shared full-screen item page ----
         self.fullscreen_item_page = FullScreenItemPage(self)
         self.stack.addWidget(self.fullscreen_item_page)  # index 11
 
@@ -1681,16 +1713,20 @@ class WellBeingApp(QWidget):
         self.stack.setCurrentIndex(10)
 
     def update_language(self, lang_code):
+        self._current_lang = lang_code
         for page in self.pages:
             if hasattr(page, 'update_language'):
                 page.update_language(lang_code)
+        # Refresh the big screen display on whichever scrollable page is currently shown
+        current_page = self.stack.currentWidget()
+        if hasattr(current_page, 'current_index') and hasattr(current_page, 'big_screen'):
+            update_big_screen_shared(current_page, current_page.current_index)
 
 
 # ==========================================
 # EXTEND FullScreenItemPage with bathroom support
 # ==========================================
 def _show_bathroom_item(self, item_name, description, media_file, bg_color, emoji_fallback, back_index):
-    """Special loader for BathroomPage — images have direct paths, not indexed."""
     self._back_index = back_index
     self._item_name = item_name
     self.name_label.setText(item_name)
@@ -1729,10 +1765,8 @@ def _show_bathroom_item(self, item_name, description, media_file, bg_color, emoj
         self.image_label.setStyleSheet(
             f"background-color: {bg_color}; color: #2C4C49; border: none;")
 
-    # Also show the description in the name label
     self.name_label.setText(f"{item_name}\n{description}")
 
-# Attach the method dynamically
 FullScreenItemPage.show_bathroom_item = _show_bathroom_item
 
 

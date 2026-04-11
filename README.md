@@ -60,3 +60,14 @@ pip install -r requirements.txt
 ```bash
 python app.py
 ```
+
+# Optional
+### 6. Install components for Raspberry Pi
+```bash
+wget https://files.waveshare.com/wiki/common/Brightness.zip
+unzip Brightness.zip
+cd Brightness
+sudo chmod +x install.sh
+./install.sh
+```
+

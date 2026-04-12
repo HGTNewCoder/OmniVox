@@ -605,11 +605,11 @@ class WelcomePage(QFrame):
         moods_h.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.mood_data = [
-            ("", "Great",     "#D5F5E3", "#4D908E"),
-            ("", "Good",      "#AED6F1", "#2471A3"),
-            ("", "Okay",      "#F9E79F", "#B7950B"),
-            ("", "Not great", "#FADBD8", "#A93226"),
-            ("", "In pain",   "#EBDEF0", "#76448A"),
+            ("assets/mood_great.png", "Great",     "#D5F5E3", "#4D908E"),
+            ("assets/mood_good.png", "Good",      "#AED6F1", "#2471A3"),
+            ("assets/mood_okay.png", "Okay",      "#F9E79F", "#B7950B"),
+            ("assets/mood_not_great.png", "Not great", "#FADBD8", "#A93226"),
+            ("assets/mood_in_pain.png", "In pain",   "#EBDEF0", "#76448A"),
         ]
         self.mood_buttons = []
         self.mood_text_labels = []

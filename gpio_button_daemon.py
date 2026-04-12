@@ -1,69 +1,66 @@
-import argparse
-import socket
+import os
 import time
+from gpiozero import Button
+from signal import pause
+import subprocess
 
+# --- CONFIGURATION ---
+IDLE_TIMEOUT_SECONDS = 300  # 5 minutes (300 seconds)
+BUTTON_GPIO = 17            # Physical Pin 11
+# ---------------------
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description=(
-            "GPIO button daemon (Raspberry Pi only). "
-            "Watches a GPIO input pin and sends a UDP 'TOGGLE' message to the app."  # noqa: E501
-        )
-    )
-    parser.add_argument("--pin", type=int, default=17, help="BCM GPIO pin number (default: 17)")
-    parser.add_argument("--host", default="127.0.0.1", help="App host (default: 127.0.0.1)")
-    parser.add_argument("--port", type=int, default=5678, help="App UDP port (default: 5678)")
-    parser.add_argument(
-        "--bouncetime",
-        type=int,
-        default=300,
-        help="Debounce time in ms for the button (default: 300)",
-    )
-    return parser.parse_args()
+class PhoneStyleScreenManager:
+    def __init__(self):
+        # Initialize button with internal Pull-Up resistor enabled
+        self.button = Button(BUTTON_GPIO, pull_up=True)
+        self.is_on = True
+        self.last_activity = time.time()
+        
+        # Link button press to the toggle function
+        self.button.when_pressed = self.toggle_screen
+        
+        # Find the backlight device path (Waveshare usually shows as 10-0045 or similar)
+        self.bl_path = self._get_backlight_path()
 
+    def _get_backlight_path(self):
+        base = "/sys/class/backlight/"
+        dirs = os.listdir(base)
+        if dirs:
+            # Returns the first backlight found (usually the DSI screen)
+            return os.path.join(base, dirs[0], "brightness")
+        return None
 
-def main() -> int:
-    args = parse_args()
-
-    try:
-        import RPi.GPIO as GPIO  # type: ignore[reportMissingImports]
-    except Exception as exc:  # pragma: no cover
-        print("RPi.GPIO is not available in this environment.")
-        print("Run this script on a Raspberry Pi (Raspberry Pi OS).")
-        print(f"Import error: {type(exc).__name__}: {exc}")
-        return 1
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    target = (args.host, args.port)
-
-    def on_press(_channel: int) -> None:
+    def set_backlight(self, state):
+        """0 is off, 255 is full brightness"""
+        if not self.bl_path: return
+        
+        val = "255" if state else "0"
         try:
-            sock.sendto(b"TOGGLE\n", target)
-        except Exception as exc:
-            print(f"Failed to send UDP message: {type(exc).__name__}: {exc}")
+            # Using sudo tee because sysfs requires root permissions
+            subprocess.run(['bash', '-c', f'echo {val} | sudo tee {self.bl_path}'], check=True, capture_output=True)
+            self.is_on = state
+            print(f"Backlight {'ON' if state else 'OFF'}")
+        except Exception as e:
+            print(f"Error: {e}")
 
-    print(f"GPIO daemon started. Pin BCM {args.pin} -> UDP {args.host}:{args.port}")
-    print("Press Ctrl+C to stop.")
+    def toggle_screen(self):
+        print("Button pressed!")
+        self.last_activity = time.time()
+        self.set_backlight(not self.is_on)
 
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(args.pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(args.pin, GPIO.FALLING, callback=on_press, bouncetime=args.bouncetime)
-
-    try:
+    def monitor(self):
         while True:
+            # Sleep if idle for too long
+            if self.is_on and (time.time() - self.last_activity > IDLE_TIMEOUT_SECONDS):
+                print("Idle timeout reached.")
+                self.set_backlight(False)
+            
             time.sleep(1)
-    except KeyboardInterrupt:
-        return 0
-    finally:
-        try:
-            GPIO.cleanup()
-        except Exception:
-            pass
-        try:
-            sock.close()
-        except Exception:
-            pass
-
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    manager = PhoneStyleScreenManager()
+    print(f"Manager active. GPIO {BUTTON_GPIO} monitoring...")
+    try:
+        manager.monitor()
+    except KeyboardInterrupt:
+        print("Exiting...")

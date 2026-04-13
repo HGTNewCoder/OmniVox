@@ -71,3 +71,5 @@ sudo chmod +x install.sh
 ./install.sh
 ```
 
+
+sudo usermod -a -G gpio $USER

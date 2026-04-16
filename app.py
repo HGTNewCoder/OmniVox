@@ -29,6 +29,7 @@ PLACEHOLDER_FILENAME = 'json_page/placeholder.json'
 GREETING_QUOTE = "Good morning, Mr. K.D"
 GREETING_SUBQUOTE = "Welcome to your daily well-being check-in"
 GREETING_QUESTION = "How are you feeling today?"
+DEFAULT_UI_FONT_SIZE = 20
 
 # Stacked widget page indices.
 PAGE_WELCOME = 0
@@ -240,7 +241,7 @@ class CommBox(QFrame):
         self.bell_title_label.setStyleSheet("color: #8B4513; background: transparent;")
 
         self.bell_desc_label = QLabel(translate("PRESS TO ALERT A STAFF MEMBER IMMEDIATELY.", selected_language))
-        self.bell_desc_label.setFont(QFont("Arial", 16))
+        self.bell_desc_label.setFont(QFont("Arial", 20))
         self.bell_desc_label.setStyleSheet("color: #555; background: transparent;")
 
         text_v_layout.addWidget(self.bell_title_label)
@@ -276,7 +277,7 @@ class CommBox(QFrame):
                 self.title_label.setStyleSheet(
                     "color: #2C4C49; padding: 15px;" if self.use_picture else "color: #2C4C49; padding-top: 10px;")
             else:
-                self.title_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+                self.title_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
                 self.title_label.setStyleSheet(
                     "color: #2C4C49; padding: 10px;" if self.use_picture
                     else "color: #2C4C49; padding-top: 10px;")
@@ -311,7 +312,7 @@ class CommBox(QFrame):
         self.desc_label.setWordWrap(True)
         self.desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.desc_label.setFont(
-            QFont("Arial", 18 if (self.large_text or self.hide_title) else 15, QFont.Weight.Bold))
+            QFont("Arial", 22 if (self.large_text or self.hide_title) else 20, QFont.Weight.Bold))
         self.desc_label.setStyleSheet("color: #444444;")
         bottom_layout.addWidget(self.desc_label)
         bottom_layout.addStretch(1)
@@ -547,12 +548,12 @@ class WelcomePage(QFrame):
         g_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.name_label = QLabel(GREETING_QUOTE)
-        self.name_label.setFont(QFont("Arial", 36, QFont.Weight.Bold))
+        self.name_label.setFont(QFont("Arial", 40, QFont.Weight.Bold))
         self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.name_label.setStyleSheet("color: #2C4C49; border: none;")
 
         self.sub_label = QLabel(GREETING_SUBQUOTE)
-        self.sub_label.setFont(QFont("Arial", 20))
+        self.sub_label.setFont(QFont("Arial", 24))
         self.sub_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.sub_label.setStyleSheet("color: #4D908E; border: none;")
 
@@ -570,7 +571,7 @@ class WelcomePage(QFrame):
 
         self.timer_status = QLabel("")
         self.timer_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.timer_status.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+        self.timer_status.setFont(QFont("Arial", 20, QFont.Weight.Bold))
 
         self.cancel_timer_btn = QPushButton("Cancel Timer")
         self.cancel_timer_btn.setFixedSize(200, 40)
@@ -594,7 +595,7 @@ class WelcomePage(QFrame):
         main.addSpacing(10)
 
         self.question_label = QLabel(GREETING_QUESTION)
-        self.question_label.setFont(QFont("Arial", 28, QFont.Weight.Bold))
+        self.question_label.setFont(QFont("Arial", 32, QFont.Weight.Bold))
         self.question_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.question_label.setStyleSheet("color: #2C4C49; border: none;")
         main.addWidget(self.question_label)
@@ -634,12 +635,12 @@ class WelcomePage(QFrame):
                 )
             else:
                 e_lbl.setText(label[:1])
-                e_lbl.setFont(QFont("Arial", 28, QFont.Weight.Bold))
+                e_lbl.setFont(QFont("Arial", 32, QFont.Weight.Bold))
             e_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             e_lbl.setStyleSheet("border: none; background: transparent;")
 
             t_lbl = QLabel(label)
-            t_lbl.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+            t_lbl.setFont(QFont("Arial", 18, QFont.Weight.Bold))
             t_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             t_lbl.setStyleSheet(f"color: {fg}; border: none; background: transparent;")
 
@@ -658,7 +659,7 @@ class WelcomePage(QFrame):
         main.addSpacing(20)
 
         self.reply_label = QLabel("")
-        self.reply_label.setFont(QFont("Arial", 18))
+        self.reply_label.setFont(QFont("Arial", 22))
         self.reply_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.reply_label.setStyleSheet("color: #4D908E; border: none;")
         main.addWidget(self.reply_label)
@@ -703,15 +704,15 @@ class WelcomePage(QFrame):
         text_block.setSpacing(2)
 
         self.alarm_scheduled_label = QLabel(translate("ALARM SCHEDULED", selected_language))
-        self.alarm_scheduled_label.setFont(QFont("Arial", 13))
+        self.alarm_scheduled_label.setFont(QFont("Arial", 17))
         self.alarm_scheduled_label.setStyleSheet("color: #8B6914; border: none; background: transparent;")
 
         self.alarm_status = QLabel("")
-        self.alarm_status.setFont(QFont("Arial", 32, QFont.Weight.Bold))
+        self.alarm_status.setFont(QFont("Arial", 36, QFont.Weight.Bold))
         self.alarm_status.setStyleSheet("color: #5C3D0E; border: none; background: transparent;")
 
         self.alarm_sub_label = QLabel(translate("RINGS ONCE — TAP BELL TO DISMISS", selected_language))
-        self.alarm_sub_label.setFont(QFont("Arial", 12))
+        self.alarm_sub_label.setFont(QFont("Arial", 16))
         self.alarm_sub_label.setStyleSheet("color: #A07830; border: none; background: transparent;")
 
         text_block.addWidget(self.alarm_scheduled_label)
@@ -1093,7 +1094,7 @@ def build_big_screen_page(page, items, image_prefix, border_color, bg_fallback):
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         label.setFixedSize(page.box_size, page.box_size)
         label.setStyleSheet(
-            "padding: 10px; font-weight: bold; font-size: 13px; "
+            "padding: 10px; font-weight: bold; font-size: 18px; "
             "color: #2C4C49; border: none; background: transparent;")
         box.setStyleSheet(f"""
             QPushButton {{ background-color: #ffffff; border: 2px solid {border_color}; border-radius: 18px; }}
@@ -2092,6 +2093,7 @@ def _show_bathroom_item(self, item_name, description, media_file, bg_color, emoj
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setFont(QFont("Arial", DEFAULT_UI_FONT_SIZE))
     window = WellBeingApp()
     window.showFullScreen()
     window.show()

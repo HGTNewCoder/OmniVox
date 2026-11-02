@@ -73,3 +73,18 @@ sudo chmod +x install.sh
 
 
 sudo usermod -a -G gpio $USER
+
+# Website (Next.js)
+A landing page plus an interactive browser replica of the app lives in `web/`.
+It reads `json_page/` at build time, so content changes show up automatically.
+
+```bash
+cd web
+npm install
+npm run dev        # http://localhost:3000
+npm run build      # static site in web/out
+npm run assets     # re-run after changing images in assets/ (needs Pillow)
+```
+
+To publish on GitHub Pages: **Settings → Pages → Source: GitHub Actions**.
+`.github/workflows/deploy-web.yml` then builds and deploys on every push to `main`.

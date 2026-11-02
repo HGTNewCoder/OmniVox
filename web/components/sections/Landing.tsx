@@ -22,7 +22,6 @@ export function Nav() {
           <a href="#features">Features</a>
           <a href="#how">How it works</a>
           <a href="#hardware">Hardware</a>
-          <a href="#run">Run it</a>
         </nav>
         <a className="btn btn-ghost btn-sm" href={REPO} target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
@@ -241,41 +240,6 @@ export function Hardware() {
         <ul className="parts">
           {parts.map(([b, s]) => <li key={b}><b>{b}</b><span>{s}</span></li>)}
         </ul>
-      </div>
-    </section>
-  );
-}
-
-export function RunIt() {
-  return (
-    <section id="run" className="run">
-      <div className="wrap">
-        <div className="section-head">
-          <p className="eyebrow">Run it</p>
-          <h2>Up and running in a few commands.</h2>
-        </div>
-        <div className="run-grid">
-          <div className="code-card">
-            <div className="code-title">On the Raspberry Pi</div>
-            <pre><code>{`git clone ${REPO}.git
-cd OmniVox
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python app.py`}</code></pre>
-          </div>
-          <div className="code-card">
-            <div className="code-title">Allow the button to read GPIO</div>
-            <pre><code>{`sudo usermod -a -G gpio $USER
-# Optional: Waveshare brightness tools
-wget https://files.waveshare.com/wiki/common/Brightness.zip
-unzip Brightness.zip && cd Brightness
-sudo chmod +x install.sh && ./install.sh`}</code></pre>
-          </div>
-        </div>
-        <p className="fine center">
-          Full system dependencies are listed in the project <a href={`${REPO}#readme`}>README</a>.
-        </p>
       </div>
     </section>
   );

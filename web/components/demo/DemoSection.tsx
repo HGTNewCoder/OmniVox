@@ -182,9 +182,6 @@ export default function DemoSection({ data }: { data: AppData }) {
               <div className="hw-row"><span>Backlight</span><strong>{sim.backlight ? "On" : "Off"}</strong></div>
               <div className="hw-row"><span>Auto-sleep in</span><strong>{idleText}</strong></div>
               <button className="chip" type="button" onClick={sim.simulateIdle}>Simulate 5 min idle</button>
-              <p className="fine">
-                On the device, a push button on GPIO 17 toggles the screen and any 5 minutes without a touch puts it to sleep.
-              </p>
             </div>
           </aside>
         </div>

@@ -1,5 +1,5 @@
 import DemoSection from "@/components/demo/DemoSection";
-import { Features, Footer, Hardware, Hero, Highlights, HowItWorks, Nav, RunIt } from "@/components/sections/Landing";
+import { Features, Footer, Hardware, Hero, Highlights, HowItWorks, Nav } from "@/components/sections/Landing";
 import { loadAppData } from "@/lib/data";
 
 export default function Home() {
@@ -15,7 +15,6 @@ export default function Home() {
         <Highlights />
         <HowItWorks />
         <Hardware />
-        <RunIt />
       </main>
       <Footer />
     </>

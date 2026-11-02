@@ -228,15 +228,6 @@ h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: -.01em; 
 .parts li { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: .85rem 1.1rem; }
 .parts span { color: var(--muted); font-size: .92rem; }
 
-/* Run */
-.run { padding: 5rem 0; background: var(--bg-alt); border-top: 1px solid var(--line); }
-.run-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
-@media (max-width: 820px) { .run-grid { grid-template-columns: 1fr; } }
-.code-card { background: #142120; border-radius: var(--radius); overflow: hidden; border: 1px solid #22403c; min-width: 0; }
-.code-title { padding: .65rem 1.1rem; font-size: .85rem; font-weight: 700; color: #a9dcd6; border-bottom: 1px solid #22403c; }
-.code-card pre { margin: 0; padding: 1rem 1.1rem 1.2rem; overflow-x: auto; }
-.code-card code { background: none; padding: 0; color: #e4f1ef; font-size: .88rem; line-height: 1.7; }
-
 /* Footer */
 .footer { padding: 2rem 0; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
 .footer-inner { display: flex; gap: 1rem 2rem; flex-wrap: wrap; align-items: center; justify-content: space-between; }

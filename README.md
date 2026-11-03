@@ -86,8 +86,7 @@ npm run build      # static site in web/out
 npm run assets     # re-run after changing images in assets/ (needs Pillow)
 ```
 
-To publish on GitHub Pages: **Settings → Pages → Source: GitHub Actions**.
-`.github/workflows/deploy-web.yml` then builds and deploys on every push to `main`.
+The site is hosted on Vercel (project root: `web/`) and redeploys on every push to `main`.
 
 The Card Manager demo is at `/manager/` on the website (simulated devices).
 

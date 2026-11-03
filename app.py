@@ -19,12 +19,14 @@ import edge_tts
 from gpio_button_daemon import PhoneStyleScreenManager
 
 import json
+import omnivox_board as boardlib
+from client_agent import ClientAgent
 
 # ==========================================
 # HARDCODED TRANSLATION DICTIONARY
 # ==========================================
 DICT_OF_TRANSLATION_FILENAME = 'json_page/translation.json'
-CARD_DATA_FILENAME = 'json_page/cards.json'
+BOARD_DIR = 'json_page'  # the cards themselves live in json_page/board.json
 PLACEHOLDER_FILENAME = 'json_page/placeholder.json'
 GREETING_QUOTE = "Good morning, Mr. K.D"
 GREETING_SUBQUOTE = "Welcome to your daily well-being check-in"
@@ -33,19 +35,16 @@ DEFAULT_UI_FONT_SIZE = 20
 DEFAULT_BOX_LABEL_FONT_PX = 22
 LARGE_BOX_LABEL_FONT_PX = 28
 
-# Stacked widget page indices.
+# Stacked widget page indices. Pages for the cards in board.json follow
+# FIRST_CARD_PAGE and are rebuilt whenever the master sends new cards.
 PAGE_WELCOME = 0
 PAGE_MAIN_MENU = 1
-PAGE_FOOD = 2
-PAGE_FEELING = 3
-PAGE_POSITION = 4
-PAGE_BATHROOM = 5
-PAGE_YES_NO = 6
-PAGE_ENTERTAINMENT = 7
-PAGE_RECOMMEND = 8
-PAGE_CLOCK = 9
-PAGE_ALERT = 10
-PAGE_FULLSCREEN_ITEM = 11
+PAGE_ALERT = 2
+PAGE_FULLSCREEN_ITEM = 3
+PAGE_CLOCK = 4
+PAGE_YES_NO = 5
+FIRST_CARD_PAGE = 6
+MENU_COLUMNS = 4
 
 
 selected_language = 'en'
@@ -184,8 +183,11 @@ class SpeechService:
 class CommBox(QFrame):
     def __init__(self, title, description, bg_color, media_file, is_bell=False,
                  show_btn=True, large_text=False, add_shadow=False,
-                 use_picture=False, hide_title=False, callback=None):
+                 use_picture=False, hide_title=False, callback=None, i18n=None):
         super().__init__()
+        # i18n: {"title": {"en", "th"}, "desc": {"en", "th"}} for cards from board.json;
+        # without it, texts are looked up in translation.json as before.
+        self.i18n = i18n
         self.is_bell = is_bell
         self.title = title
         self.description = description
@@ -385,10 +387,16 @@ class CommBox(QFrame):
             "background-color: white; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; border: none;")
 
     def update_language(self, lang_code):
-        if not self.hide_title and hasattr(self, 'title_label'):
-            self.title_label.setText(translate(self.title, lang_code))
-        if hasattr(self, 'desc_label'):
-            self.desc_label.setText(translate(self.description.upper(), lang_code))
+        if self.i18n:
+            if not self.hide_title and hasattr(self, 'title_label'):
+                self.title_label.setText(boardlib.text(self.i18n.get("title"), lang_code))
+            if hasattr(self, 'desc_label'):
+                self.desc_label.setText(boardlib.text(self.i18n.get("desc"), lang_code))
+        else:
+            if not self.hide_title and hasattr(self, 'title_label'):
+                self.title_label.setText(translate(self.title, lang_code))
+            if hasattr(self, 'desc_label'):
+                self.desc_label.setText(translate(self.description.upper(), lang_code))
         if hasattr(self, 'btn'):
             self.btn.setText(translate("TALK WITH US", lang_code))
         if self.is_bell:
@@ -401,15 +409,13 @@ class CommBox(QFrame):
 
 
 # ==========================================
-# PAGE 11: FULL SCREEN ITEM PAGE
+# FULL SCREEN ITEM PAGE
 # ==========================================
 class FullScreenItemPage(QFrame):
     def __init__(self, app):
         super().__init__()
         self.app = app
         self._back_index = 1
-        self._image_prefix = ""
-        self._item_index = 0
         self._item_name = ""
         self._bg_fallback = "#E8F8F5"
         self._emoji_fallback = ""
@@ -463,18 +469,15 @@ class FullScreenItemPage(QFrame):
 
         layout.addWidget(self.bottom_bar, stretch=0)
 
-    def show_item(self, item_name, item_index, image_prefix, bg_fallback, emoji_fallback, back_index):
+    def show_item(self, item_name, image_path, bg_fallback, emoji_fallback, back_index):
         self._back_index = back_index
-        self._image_prefix = image_prefix
-        self._item_index = item_index
         self._item_name = item_name
         self._bg_fallback = bg_fallback
         self._emoji_fallback = emoji_fallback
 
         self.name_label.setText(item_name)
 
-        image_path = f"assets/{image_prefix}_{item_index}.png"
-        if os.path.exists(image_path):
+        if image_path and os.path.exists(image_path):
             pixmap = QPixmap(image_path)
             screen_w = self.app.width()
             screen_h = self.app.height() - self.bottom_bar.height()
@@ -530,7 +533,7 @@ class FullScreenItemPage(QFrame):
 
 
 # ==========================================
-# PAGE 0: WELCOME PAGE
+# WELCOME PAGE
 # ==========================================
 class WelcomePage(QFrame):
     def __init__(self, app):
@@ -855,15 +858,15 @@ class WelcomePage(QFrame):
 
 
 # ==========================================
-# PAGE 1: MAIN MENU
+# MAIN MENU (built from board.json)
 # ==========================================
 class MainMenuPage(QFrame):
-    def __init__(self, app):
+    def __init__(self, app, board):
         super().__init__()
         self.app = app
+        self.board = board
         self.setStyleSheet("background-color: #F0F8F7;")
         self.main_layout = QVBoxLayout(self)
-        self.file_path = "json_page/cards.json"
         self.header_container = QFrame()
         self.header_container.setFixedHeight(120)
         self.header_container.setStyleSheet("background-color: #8FC8C2; border: none;")
@@ -889,7 +892,8 @@ class MainMenuPage(QFrame):
         header_h_layout.addLayout(text_v_layout)
         header_h_layout.addStretch(1)
 
-        self.lang_btn = QPushButton("ENGLISH")
+        self.lang_btn = QPushButton(
+            "THAI / ไทย" if getattr(app, '_current_lang', 'en') == "th" else "ENGLISH")
         self.lang_btn.setFixedSize(160, 60)
         self.lang_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.lang_btn.setStyleSheet("""
@@ -906,42 +910,25 @@ class MainMenuPage(QFrame):
         self.grid.setContentsMargins(25, 10, 25, 10)
         self.grid.setSpacing(20)
         self.cards = []
-        self.card_data = self.load_cards_from_json()
-        for title, desc, col, img, r, c in self.card_data:
-            card = CommBox(title=title, description=desc, bg_color=col,
-                           media_file=img, callback=self.navigate)
-            self.cards.append(card)
-            self.grid.addWidget(card, r, c)
+        lang = getattr(self.app, '_current_lang', selected_language)
+        visible = [c for c in board["cards"] if c["visible"]]
+        for i, card in enumerate(visible):
+            box = CommBox(title=boardlib.text(card["title"], lang),
+                          description=boardlib.text(card["description"], lang),
+                          bg_color=card["color"], media_file=card["image"],
+                          callback=lambda _title, cid=card["id"]: self.navigate(cid),
+                          i18n={"title": card["title"], "desc": card["description"]})
+            self.cards.append(box)
+            self.grid.addWidget(box, i // MENU_COLUMNS, i % MENU_COLUMNS)
 
+        rows = max(1, -(-len(visible) // MENU_COLUMNS))
+        for r in range(rows):
+            self.grid.setRowStretch(r, 1)
         self.bell_card = CommBox(title="", description="", bg_color="#FFEADB",
                                  media_file="assets/bell.png", is_bell=True, callback=self.navigate)
-        self.grid.addWidget(self.bell_card, 2, 0, 1, 4)
+        self.grid.addWidget(self.bell_card, rows, 0, 1, MENU_COLUMNS)
 
         self.main_layout.addLayout(self.grid)
-
-    def load_cards_from_json(self):
-        card_data = []
-        try:
-            with open(self.file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                card_data = [
-                    (
-                        item['title'],
-                        item['description'],
-                        item['color'],
-                        item['image'],
-                        item['row'],
-                        item['column']
-                    )
-                    for item in data
-                ]
-        except FileNotFoundError:
-            print(f"Error: {self.file_path} not found.")
-            card_data = []
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            card_data = []
-        return card_data
 
     def toggle_language(self):
         if self.lang_btn.text() == "ENGLISH":
@@ -951,22 +938,13 @@ class MainMenuPage(QFrame):
             self.lang_btn.setText("ENGLISH")
             self.app.update_language("en")
 
-    def navigate(self, title):
-        pages = {
-            "FOOD": PAGE_FOOD,
-            "FEELING": PAGE_FEELING,
-            "POSITION & COMFORT": PAGE_POSITION,
-            "BATHROOM": PAGE_BATHROOM,
-            "YES / NO": PAGE_YES_NO,
-            "ENTERTAINMENT": PAGE_ENTERTAINMENT,
-            "RECOMMEND ANSWER": PAGE_RECOMMEND,
-        }
-        if title in pages:
-            self.app.stack.setCurrentIndex(pages[title])
-        elif title == "CLOCK":
-            self.app.stack.setCurrentIndex(PAGE_CLOCK)
-        elif title == "BELL":
+    def navigate(self, card_id):
+        if card_id == "BELL":
             self.app.trigger_alert("Emergency! Staff has been alerted!")
+            return
+        index = self.app.card_page_index.get(card_id)
+        if index is not None:
+            self.app.stack.setCurrentIndex(index)
 
     def update_language(self, lang_code):
         self.header_label.setText(translate("MY DAILY WELL-BEING", lang_code))
@@ -983,10 +961,11 @@ class MainMenuPage(QFrame):
 # BASE PAGE
 # ==========================================
 class BasePage(QFrame):
-    def __init__(self, app, title):
+    def __init__(self, app, title, title_i18n=None):
         super().__init__()
         self.app = app
         self.original_title = title
+        self.title_i18n = title_i18n
         self.scroll_area = QScrollArea()
         self.total_step = 1
         self._items = []
@@ -997,14 +976,15 @@ class BasePage(QFrame):
         self.setStyleSheet("background-color: #F0F8F7;")
         layout = QVBoxLayout(self)
 
-        self.header = QLabel(title)
+        lang = getattr(app, '_current_lang', selected_language)
+        self.header = QLabel(boardlib.text(title_i18n, lang) if title_i18n else title)
         self.header.setFont(QFont("Arial", 32, QFont.Weight.Bold))
         self.header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.header.setStyleSheet("color: #2C4C49;")
         layout.addWidget(self.header)
         layout.addStretch()
 
-        self.back_btn = QPushButton(translate("GO BACK", selected_language))
+        self.back_btn = QPushButton(translate("GO BACK", lang))
         self.back_btn.setFixedSize(200, 60)
         self.back_btn.setStyleSheet(
             "background-color: #BDBDBD; color: white; border-radius: 15px; "
@@ -1014,44 +994,19 @@ class BasePage(QFrame):
         layout.addWidget(self.back_btn, alignment=Qt.AlignmentFlag.AlignCenter)
         self.page_layout = layout
 
-    def load_items_from_json(self, file_path, selected_language):
-        returned_list = []
-        self._items_by_language = {}
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                temp = json.load(f)
-                lang_map = {item["language"]: item["data"] for item in temp}
-
-                for lang, data in lang_map.items():
-                    if isinstance(data, dict):
-                        self._items_by_language[lang] = list(data.values())
-                    elif isinstance(data, list):
-                        self._items_by_language[lang] = list(data)
-                    else:
-                        self._items_by_language[lang] = []
-
-                returned_list = self._items_by_language.get(
-                    selected_language,
-                    self._items_by_language.get("en", [])
-                )
-
-        except FileNotFoundError:
-            print("Error: File not found.")
-            returned_list = []
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            returned_list = []
-        return returned_list
-
     def update_language(self, lang_code):
-        self.header.setText(translate(self.original_title, lang_code))
+        if self.title_i18n:
+            self.header.setText(boardlib.text(self.title_i18n, lang_code))
+        else:
+            self.header.setText(translate(self.original_title, lang_code))
         self.back_btn.setText(translate("GO BACK", lang_code))
 
 
 # ==========================================
 # SHARED BIG SCREEN MIXIN
 # ==========================================
-def build_big_screen_page(page, items, image_prefix, border_color, bg_fallback, box_label_font_px=DEFAULT_BOX_LABEL_FONT_PX):
+def build_big_screen_page(page, items, images, border_color, bg_fallback, box_label_font_px=DEFAULT_BOX_LABEL_FONT_PX):
+    """items: labels in the current language; images: one picture path per item ("" = none)."""
     page.current_index = 0
     page._is_rendering = False
 
@@ -1082,7 +1037,7 @@ def build_big_screen_page(page, items, image_prefix, border_color, bg_fallback, 
 
     page.box_size = 140
     page.total_step = page.box_size + 15
-    page._image_prefix = image_prefix
+    page._images = list(images)
     page._items = items
     page._bg_fallback = bg_fallback
     page._border_color = border_color
@@ -1131,8 +1086,9 @@ def update_big_screen_shared(page, index):
         page._is_rendering = False
         return
 
-    image_path = f"assets/{page._image_prefix}_{index}.png"
-    if os.path.exists(image_path):
+    images = getattr(page, '_images', [])
+    image_path = images[index] if index < len(images) else ""
+    if image_path and os.path.exists(image_path):
         pixmap = QPixmap(image_path)
         scaled = pixmap.scaled(w, h, Qt.AspectRatioMode.KeepAspectRatioByExpanding,
                                Qt.TransformationMode.SmoothTransformation)
@@ -1163,58 +1119,51 @@ def update_big_screen_shared(page, index):
     page._is_rendering = False
 
 
-def open_fullscreen_for_page(page, idx, back_page_index):
-    emoji = emoji_map.get(page._image_prefix, "")
-    display_name = page._items[idx]
-    page.app.fullscreen_item_page.show_item(
-        item_name=display_name,
-        item_index=idx,
-        image_prefix=page._image_prefix,
-        bg_fallback=page._bg_fallback,
-        emoji_fallback=emoji,
-        back_index=back_page_index,
-    )
-    page.app.stack.setCurrentIndex(PAGE_FULLSCREEN_ITEM)
-
-
 def big_screen_update_language(page, lang_code):
-    if hasattr(page, '_items_by_language') and page._items_by_language:
-        page._items = page._items_by_language.get(lang_code, page._items_by_language.get("en", page._items))
-        for idx, item in enumerate(page._box_widgets):
-            label = item[1]
-            if idx < len(page._items):
-                label.setText(page._items[idx])
-        if hasattr(page, 'current_index'):
-            update_big_screen_shared(page, page.current_index)
-        return
-
-    for item in page._box_widgets:
-        original_name, label = item[0], item[1]
-        label.setText(translate(original_name, lang_code))
+    page._items = page._items_by_language.get(lang_code, page._items_by_language.get("en", page._items))
+    for idx, item in enumerate(page._box_widgets):
+        label = item[1]
+        if idx < len(page._items):
+            label.setText(page._items[idx])
     if hasattr(page, 'current_index'):
         update_big_screen_shared(page, page.current_index)
 
 
+def speak_board_item(page, idx):
+    """Say an item of a board card, falling back to English if Thai speech fails."""
+    if not (0 <= idx < len(page.card["items"])) or not hasattr(page.app, 'speak_label'):
+        return
+    lang = getattr(page.app, '_current_lang', 'en')
+    item = page.card["items"][idx]
+    page.app.speak_label(
+        boardlib.spoken(page.card, item, lang),
+        lang_code=lang,
+        fallback_text=boardlib.spoken(page.card, item, 'en') if lang == 'th' else None,
+        fallback_lang_code='en' if lang == 'th' else None,
+    )
+
+
+def _labels_by_language(card):
+    return {lang: [boardlib.text(it["label"], lang) for it in card["items"]] for lang in boardlib.LANGS}
+
+
 # ==========================================
-# SHARED CATEGORY PAGE (scrollable + big-screen)
+# LIST CARD PAGE — scrollable strip + big picture (Food, Feeling, ...)
 # ==========================================
-class ScrollableCategoryPage(BasePage):
-    def __init__(self, app, title, data_file, image_prefix, border_color, bg_fallback,
-                 back_page_index, translate_item_names=True, speak_on_select=False,
-                 box_label_font_px=DEFAULT_BOX_LABEL_FONT_PX):
-        super().__init__(app, title)
-        self.file_path = data_file
-        self._back_page_index = back_page_index
-        self._translate_item_names = translate_item_names
-        self._speak_on_select = speak_on_select
-        self.items = self.load_items_from_json(self.file_path, selected_language)
+class ListCardPage(BasePage):
+    def __init__(self, app, card, page_index):
+        super().__init__(app, boardlib.text(card["page_title"], "en"), title_i18n=card["page_title"])
+        self.card = card
+        self.page_index = page_index
+        self._items_by_language = _labels_by_language(card)
+        lang = getattr(app, '_current_lang', selected_language)
         build_big_screen_page(
             self,
-            self.items,
-            image_prefix,
-            border_color,
-            bg_fallback,
-            box_label_font_px=box_label_font_px,
+            self._items_by_language[lang],
+            [it["image"] for it in card["items"]],
+            card["accent"],
+            card["accent"],
+            box_label_font_px=LARGE_BOX_LABEL_FONT_PX if card["large_text"] else DEFAULT_BOX_LABEL_FONT_PX,
         )
 
     def showEvent(self, event):
@@ -1225,29 +1174,19 @@ class ScrollableCategoryPage(BasePage):
     def on_box_clicked(self, idx):
         self.current_index = idx
         update_big_screen_shared(self, idx)
-        if self._speak_on_select and hasattr(self.app, 'speak_label') and 0 <= idx < len(self._items):
-            lang = getattr(self.app, '_current_lang', 'en')
-            primary_item = self._items[idx]
-            primary_text = self.speech_text_for_item(primary_item, lang_code=lang)
-
-            fallback_text = None
-            fallback_lang = None
-            if lang == 'th':
-                en_items = getattr(self, '_items_by_language', {}).get('en')
-                if en_items and idx < len(en_items):
-                    fallback_text = self.speech_text_for_item(en_items[idx], lang_code='en')
-                    fallback_lang = 'en'
-
-            self.app.speak_label(
-                primary_text,
-                lang_code=lang,
-                fallback_text=fallback_text,
-                fallback_lang_code=fallback_lang,
-            )
+        if self.card["speak"]:
+            speak_board_item(self, idx)
         hbar = self.scroll_area.horizontalScrollBar()
         if hbar is not None:
             hbar.setValue(idx * self.total_step)
-        open_fullscreen_for_page(self, idx, back_page_index=self._back_page_index)
+        self.app.fullscreen_item_page.show_item(
+            item_name=self._items[idx],
+            image_path=self._images[idx],
+            bg_fallback=self.card["accent"],
+            emoji_fallback=emoji_map.get(self.card["id"], ""),
+            back_index=self.page_index,
+        )
+        self.app.stack.setCurrentIndex(PAGE_FULLSCREEN_ITEM)
 
     def handle_scroll_update(self, value):
         index = round(value / self.total_step)
@@ -1258,196 +1197,94 @@ class ScrollableCategoryPage(BasePage):
     def update_big_screen(self, index):
         update_big_screen_shared(self, index)
 
-    def speech_text_for_item(self, item_text, lang_code=None):
-        return item_text
-
     def update_language(self, lang_code):
         super().update_language(lang_code)
-        if self._translate_item_names:
-            big_screen_update_language(self, lang_code)
+        big_screen_update_language(self, lang_code)
 
 
 # ==========================================
-# FOOD PAGE (index 2)
+# PHRASES CARD PAGE — text-only quick phrases (Recommend answer)
 # ==========================================
-class FoodPage(ScrollableCategoryPage):
-    def __init__(self, app):
-        super().__init__(
-            app=app,
-            title="FOOD MENU",
-            data_file="json_page/food.json",
-            image_prefix="food",
-            border_color="#FDEBD0",
-            bg_fallback="#FDEBD0",
-            back_page_index=PAGE_FOOD,
-            translate_item_names=False,
-            speak_on_select=False,
-        )
-
-
-# ==========================================
-# FEELING PAGE (index 3)
-# ==========================================
-class FeelingPage(ScrollableCategoryPage):
-    def __init__(self, app):
-        super().__init__(
-            app=app,
-            title="FEELING & MOOD",
-            data_file="json_page/feelings.json",
-            image_prefix="feeling",
-            border_color="#F9E79F",
-            bg_fallback="#F9E79F",
-            back_page_index=PAGE_FEELING,
-            translate_item_names=True,
-            speak_on_select=True,
-            box_label_font_px=LARGE_BOX_LABEL_FONT_PX,
-        )
-
-    def speech_text_for_item(self, item_text, lang_code=None):
-        lang = lang_code or getattr(self.app, '_current_lang', 'en')
-        if lang == 'th':
-            return f"ฉันรู้สึก {item_text}"
-        return f"I feel {item_text.lower()}"
-
-
-# ==========================================
-# POSITION & COMFORT PAGE (index 4)
-# ==========================================
-class PositionPage(ScrollableCategoryPage):
-    def __init__(self, app):
-        super().__init__(
-            app=app,
-            title="POSITION & COMFORT",
-            data_file="json_page/position.json",
-            image_prefix="position",
-            border_color="#D6EAF8",
-            bg_fallback="#D6EAF8",
-            back_page_index=PAGE_POSITION,
-            translate_item_names=True,
-            speak_on_select=True,
-            box_label_font_px=LARGE_BOX_LABEL_FONT_PX,
-        )
-
-
-# ==========================================
-# ENTERTAINMENT PAGE (index 7)
-# ==========================================
-class EntertainmentPage(ScrollableCategoryPage):
-    def __init__(self, app):
-        super().__init__(
-            app=app,
-            title="ENTERTAINMENT",
-            data_file="json_page/entertainment.json",
-            image_prefix="entertainment",
-            border_color="#D5F5E3",
-            bg_fallback="#D5F5E3",
-            back_page_index=PAGE_ENTERTAINMENT,
-            translate_item_names=False,
-            speak_on_select=False,
-        )
-
-
-# ==========================================
-# RECOMMEND PAGE (index 8)
-# ==========================================
-class RecommendPage(BasePage):
-    def __init__(self, app):
-        super().__init__(app, "RECOMMENDATIONS")
-        self.recommend_items = self.load_items_from_json("json_page/recommend.json", selected_language)
+class PhrasesCardPage(BasePage):
+    def __init__(self, app, card, page_index):
+        super().__init__(app, boardlib.text(card["page_title"], "en"), title_i18n=card["page_title"])
+        self.card = card
+        self.page_index = page_index
+        self._items_by_language = _labels_by_language(card)
+        lang = getattr(app, '_current_lang', selected_language)
         build_big_screen_page(
             self,
-            self.recommend_items,
-            "recommend",
-            "#FCF3CF",
-            "#FCF3CF",
-            box_label_font_px=LARGE_BOX_LABEL_FONT_PX,
+            self._items_by_language[lang],
+            [],
+            card["accent"],
+            card["accent"],
+            box_label_font_px=LARGE_BOX_LABEL_FONT_PX if card["large_text"] else DEFAULT_BOX_LABEL_FONT_PX,
         )
-
-        self._box_buttons = []
-        for i in range(self.h_layout.count()):
-            item = self.h_layout.itemAt(i)
-            if item is None:
-                continue
-            widget = item.widget()
-            if widget:
-                self._box_buttons.append(widget)
+        self._box_buttons = [w for _name, _label, w in self._box_widgets]
 
     def showEvent(self, event):
         super().showEvent(event)
         if hasattr(self, 'current_index'):
-            self._update_recommend_big_screen(self.current_index)
+            self._update_phrase_big_screen(self.current_index)
 
-    def _update_recommend_big_screen(self, index):
+    def _update_phrase_big_screen(self, index):
         text = self._items[index] if index < len(self._items) else ""
         self.big_screen.setPixmap(QPixmap())
         self.big_screen.setText(text)
         self.big_screen.setWordWrap(True)
         self.big_screen.setFont(QFont("Arial", 48, QFont.Weight.Bold))
         self.big_screen.setStyleSheet(
-            "background-color: #FCF3CF; color: #2C4C49; border-radius: 25px; "
+            f"background-color: {self.card['accent']}; color: #2C4C49; border-radius: 25px; "
             "border: none; padding: 30px;")
 
     def _highlight_box(self, selected_idx):
+        accent = self.card["accent"]
         for i, box in enumerate(self._box_buttons):
             if i == selected_idx:
-                box.setStyleSheet("""
-                    QPushButton { background-color: #FCF3CF; border: 3px solid #2C4C49; border-radius: 18px; }
-                    QPushButton:pressed { background-color: #FCF3CF; }
+                box.setStyleSheet(f"""
+                    QPushButton {{ background-color: {accent}; border: 3px solid #2C4C49; border-radius: 18px; }}
+                    QPushButton:pressed {{ background-color: {accent}; }}
                 """)
             else:
-                box.setStyleSheet("""
-                    QPushButton { background-color: #ffffff; border: 2px solid #FCF3CF; border-radius: 18px; }
-                    QPushButton:pressed { background-color: #FCF3CF; }
+                box.setStyleSheet(f"""
+                    QPushButton {{ background-color: #ffffff; border: 2px solid {accent}; border-radius: 18px; }}
+                    QPushButton:pressed {{ background-color: {accent}; }}
                 """)
 
     def on_box_clicked(self, idx):
         self.current_index = idx
         self._highlight_box(idx)
-        self._update_recommend_big_screen(idx)
-        if 0 <= idx < len(self._items):
-            lang = getattr(self.app, '_current_lang', 'en')
-            primary_text = self._items[idx]
-            fallback_text = None
-            fallback_lang = None
-            if lang == 'th':
-                en_items = getattr(self, '_items_by_language', {}).get('en')
-                if en_items and idx < len(en_items):
-                    fallback_text = en_items[idx]
-                    fallback_lang = 'en'
-            self.app.speak_label(
-                primary_text,
-                lang_code=lang,
-                fallback_text=fallback_text,
-                fallback_lang_code=fallback_lang,
-            )
+        self._update_phrase_big_screen(idx)
+        speak_board_item(self, idx)
 
     def handle_scroll_update(self, value):
         pass
 
     def update_big_screen(self, index):
-        self._update_recommend_big_screen(index)
+        self._update_phrase_big_screen(index)
 
     def update_language(self, lang_code):
         super().update_language(lang_code)
         big_screen_update_language(self, lang_code)
         if hasattr(self, 'current_index'):
             self._highlight_box(self.current_index)
-            self._update_recommend_big_screen(self.current_index)
+            self._update_phrase_big_screen(self.current_index)
 
 
 # ==========================================
-# BATHROOM PAGE (index 5)
+# GRID CARD PAGE — big picture tiles that speak a sentence (Bathroom)
 # ==========================================
-class BathroomPage(QFrame):
-    def __init__(self, app):
+class GridCardPage(QFrame):
+    def __init__(self, app, card, page_index):
         super().__init__()
         self.app = app
-        self.file_path = 'json_page/bathroom.json'
-        self.bathroom_translations = {}
+        self.card = card
+        self.page_index = page_index
         self.setStyleSheet("background-color: #F0F8F7;")
         layout = QVBoxLayout(self)
+        lang = getattr(app, '_current_lang', selected_language)
 
-        self.header = QLabel("BATHROOM ASSISTANCE")
+        self.header = QLabel(boardlib.text(card["page_title"], lang))
         self.header.setFont(QFont("Arial", 32, QFont.Weight.Bold))
         self.header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.header.setStyleSheet("padding: 20px; color: #2C4C49;")
@@ -1455,24 +1292,22 @@ class BathroomPage(QFrame):
 
         grid = QGridLayout()
         grid.setHorizontalSpacing(25)
-        grid.setVerticalSpacing(60)
+        grid.setVerticalSpacing(60 if len(card["items"]) <= 6 else 30)
         grid.setContentsMargins(40, 10, 40, 10)
-
-        self.options_data = self.load_options_data()
-        initial_lang = getattr(self.app, '_current_lang', selected_language)
+        columns = 3 if len(card["items"]) <= 6 else 4
 
         self.cards = []
-        for t, d, c, mf, r, col in self.options_data:
-            card = CommBox(title=t, description=d, bg_color=c, media_file=mf,
-                           show_btn=False, add_shadow=True, use_picture=True,
-                           hide_title=True, callback=self.handle_bathroom_selection)
-            if hasattr(card, 'desc_label'):
-                card.desc_label.setText(self._bathroom_translate(t, initial_lang))
-            self.cards.append(card)
-            grid.addWidget(card, r, col)
+        for i, item in enumerate(card["items"]):
+            box = CommBox(title=item["id"], description=boardlib.text(item["label"], lang),
+                          bg_color=item["color"], media_file=item["image"],
+                          show_btn=False, add_shadow=True, use_picture=True, hide_title=True,
+                          callback=lambda _title, idx=i: self.select(idx),
+                          i18n={"title": item["label"], "desc": item["label"]})
+            self.cards.append(box)
+            grid.addWidget(box, i // columns, i % columns)
 
         layout.addLayout(grid)
-        self.back_btn = QPushButton("Go Back")
+        self.back_btn = QPushButton(translate("GO BACK", lang))
         self.back_btn.setFixedSize(200, 60)
         self.back_btn.setStyleSheet(
             "background-color: #BDBDBD; color: white; border-radius: 15px; "
@@ -1481,96 +1316,29 @@ class BathroomPage(QFrame):
         layout.addWidget(self.back_btn, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addSpacing(20)
 
-    def load_options_data(self):
-        try:
-            with open(self.file_path, 'r', encoding='utf-8') as f:
-                payload = json.load(f)
-
-            items = []
-            translations = []
-
-            if isinstance(payload, dict):
-                items = payload.get('items', [])
-                translations = payload.get('translations', [])
-            elif isinstance(payload, list):
-                if payload and isinstance(payload[0], dict) and 'id' in payload[0]:
-                    items = payload
-                elif payload and isinstance(payload[0], dict) and 'language' in payload[0]:
-                    translations = payload
-
-            self.bathroom_translations = {
-                entry.get('language'): entry.get('data', {})
-                for entry in translations
-                if isinstance(entry, dict) and 'language' in entry
-            }
-
-            return [
-                (
-                    item['id'],
-                    item.get('message_key', item.get('message', '')),
-                    item['color'],
-                    item['image_path'],
-                    item['row'],
-                    item['col']
-                )
-                for item in items
-            ]
-        except FileNotFoundError:
-            print(f"Error: The file {self.file_path} was not found.")
-            return []
-        except KeyError as e:
-            print(f"Error: Missing expected key in JSON: {e}")
-            return []
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            return []
-
-    def _bathroom_translate(self, text, lang_code):
-        if lang_code in self.bathroom_translations:
-            return self.bathroom_translations[lang_code].get(text, translate(text, lang_code))
-        return translate(text, lang_code)
-
-    def handle_bathroom_selection(self, choice):
-        match = next((entry for entry in self.options_data if entry[0] == choice), None)
-        if match is None:
-            return
-        t, d, c, media_file, r, col = match
-
-        emoji = emoji_map.get(t, "")
+    def select(self, idx):
+        item = self.card["items"][idx]
         lang = getattr(self.app, '_current_lang', 'en')
-        primary_text = self._bathroom_translate(d, lang)
-        fallback_text = None
-        fallback_lang = None
-        if lang == 'th':
-            fallback_text = translate(d, 'en')
-            fallback_lang = 'en'
-        self.app.speak_label(
-            primary_text,
-            lang_code=lang,
-            fallback_text=fallback_text,
-            fallback_lang_code=fallback_lang,
-        )
-
+        speak_board_item(self, idx)
         self.app.fullscreen_item_page.show_bathroom_item(
-            item_name=self._bathroom_translate(t, lang),
-            description=self._bathroom_translate(d, lang),
-            media_file=media_file,
-            bg_color=c,
-            emoji_fallback=emoji,
-            back_index=PAGE_BATHROOM,
+            item_name=boardlib.text(item["label"], lang),
+            description=boardlib.spoken(self.card, item, lang),
+            media_file=item["image"],
+            bg_color=item["color"],
+            emoji_fallback=emoji_map.get(item["id"].upper(), ""),
+            back_index=self.page_index,
         )
         self.app.stack.setCurrentIndex(PAGE_FULLSCREEN_ITEM)
 
     def update_language(self, lang_code):
-        self.header.setText(translate("BATHROOM ASSISTANCE", lang_code))
+        self.header.setText(boardlib.text(self.card["page_title"], lang_code))
         self.back_btn.setText(translate("GO BACK", lang_code))
-        for card in self.cards:
-            if hasattr(card, 'desc_label'):
-                card.desc_label.setText(self._bathroom_translate(card.description, lang_code))
+        for box in self.cards:
+            box.update_language(lang_code)
 
 
 # ==========================================
-# YES/NO PAGE (index 6)
+# YES/NO PAGE
 # ==========================================
 class YesNoPage(QFrame):
     def __init__(self, app):
@@ -1702,7 +1470,7 @@ class YesNoPage(QFrame):
 
 
 # ==========================================
-# CLOCK PAGE (index 9)
+# CLOCK PAGE
 # ==========================================
 class ClockPage(QFrame):
     def __init__(self, app):
@@ -1866,7 +1634,7 @@ class ClockPage(QFrame):
 
 
 # ==========================================
-# PAGE 10: FULL SCREEN ALERT PAGE
+# FULL SCREEN ALERT PAGE
 # ==========================================
 class AlertPage(QFrame):
     def __init__(self, app):
@@ -1955,52 +1723,101 @@ class WellBeingApp(QWidget):
 
         self.stack = QStackedWidget(self)
 
+        # Fixed pages (indices PAGE_WELCOME .. PAGE_YES_NO).
         self.welcome_page = WelcomePage(self)
         self.stack.addWidget(self.welcome_page)
-
-        self.main_menu = MainMenuPage(self)
-        self.stack.addWidget(self.main_menu)
-
-        self.food_page = FoodPage(self)
-        self.stack.addWidget(self.food_page)
-
-        self.feeling_page = FeelingPage(self)
-        self.stack.addWidget(self.feeling_page)
-
-        self.position_page = PositionPage(self)
-        self.stack.addWidget(self.position_page)
-
-        self.bathroom_page = BathroomPage(self)
-        self.stack.addWidget(self.bathroom_page)
-
-        self.yes_no_page = YesNoPage(self)
-        self.stack.addWidget(self.yes_no_page)
-
-        self.entertainment_page = EntertainmentPage(self)
-        self.stack.addWidget(self.entertainment_page)
-
-        self.recommend_page = RecommendPage(self)
-        self.stack.addWidget(self.recommend_page)
-
-        self.clock_page = ClockPage(self)
-        self.stack.addWidget(self.clock_page)
-
+        self.stack.addWidget(QFrame())  # PAGE_MAIN_MENU, replaced by _build_card_pages()
         self.alert_page = AlertPage(self)
         self.stack.addWidget(self.alert_page)
-
         self.fullscreen_item_page = FullScreenItemPage(self)
         self.stack.addWidget(self.fullscreen_item_page)
+        self.clock_page = ClockPage(self)
+        self.stack.addWidget(self.clock_page)
+        self.yes_no_page = YesNoPage(self)
+        self.stack.addWidget(self.yes_no_page)
+        self.fixed_pages = [self.welcome_page, self.alert_page, self.fullscreen_item_page,
+                            self.clock_page, self.yes_no_page]
 
-        self.pages = [
-            self.welcome_page, self.main_menu, self.food_page, self.feeling_page,
-            self.position_page, self.bathroom_page, self.yes_no_page,
-            self.entertainment_page, self.recommend_page, self.clock_page,
-            self.alert_page, self.fullscreen_item_page
-        ]
+        # Pages for the cards in board.json (menu + one page per card).
+        self.board = boardlib.load_board(BOARD_DIR)
+        self.card_pages = []
+        self.card_page_index = {}
+        self._build_card_pages()
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.stack)
+
+        # Banner used for "cards updated" and "identify this device".
+        self.banner = QLabel(self)
+        self.banner.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.banner.setFont(QFont("Arial", 30, QFont.Weight.Bold))
+        self.banner.setStyleSheet(
+            "background-color: rgba(44, 76, 73, 230); color: white; border-radius: 24px; padding: 24px 40px;")
+        self.banner.hide()
+
+        # The master (card manager) talks to this device through the agent.
+        self._pending_board = None
+        self._pending_identify = None
+        self.agent = None
+        try:
+            self.agent = ClientAgent(
+                root=".",
+                on_change=lambda board: setattr(self, "_pending_board", board),
+                on_identify=lambda name: setattr(self, "_pending_identify", name),
+            ).start()
+            print(f"[OmniVox] card manager can reach '{self.agent.identity.name}' on port {self.agent.port}")
+        except OSError as e:
+            print(f"[OmniVox] card manager link disabled: {e}")
+
+    # ------------------------------------------------------------------
+    # Board-driven pages
+    # ------------------------------------------------------------------
+    def _build_card_pages(self):
+        old_menu = self.stack.widget(PAGE_MAIN_MENU)
+        self.main_menu = MainMenuPage(self, self.board)
+        self.stack.insertWidget(PAGE_MAIN_MENU, self.main_menu)
+        self.stack.removeWidget(old_menu)
+        old_menu.deleteLater()
+
+        for page in self.card_pages:
+            self.stack.removeWidget(page)
+            page.deleteLater()
+        self.card_pages = []
+        self.card_page_index = {}
+
+        page_types = {"list": ListCardPage, "grid": GridCardPage, "phrases": PhrasesCardPage}
+        for card in self.board["cards"]:
+            if card["type"] == "yesno":
+                self.card_page_index[card["id"]] = PAGE_YES_NO
+            elif card["type"] == "clock":
+                self.card_page_index[card["id"]] = PAGE_CLOCK
+            else:
+                index = FIRST_CARD_PAGE + len(self.card_pages)
+                page = page_types[card["type"]](self, card, index)
+                self.stack.insertWidget(index, page)
+                self.card_pages.append(page)
+                self.card_page_index[card["id"]] = index
+
+        self.pages = [self.welcome_page, self.main_menu, *self.fixed_pages[1:], *self.card_pages]
+
+    def apply_new_board(self, board):
+        """Swap in cards sent by the master. Runs on the Qt thread."""
+        current = self.stack.currentIndex()
+        self.board = board
+        self._build_card_pages()
+        self.update_language(self._current_lang)
+        if current == PAGE_MAIN_MENU or current == PAGE_FULLSCREEN_ITEM or current >= FIRST_CARD_PAGE:
+            self.stack.setCurrentIndex(PAGE_MAIN_MENU)
+        self.show_banner(translate("CARDS UPDATED", self._current_lang))
+
+    def show_banner(self, message, ms=3500):
+        self.banner.setText(message)
+        self.banner.adjustSize()
+        self.banner.move((self.width() - self.banner.width()) // 2, 40)
+        self.banner.raise_()
+        self.banner.show()
+        QTimer.singleShot(ms, self.banner.hide)
 
     def mousePressEvent(self, event):
         if hasattr(self, 'screen_manager'):
@@ -2015,6 +1832,14 @@ class WellBeingApp(QWidget):
         super().touchEvent(event)
 
     def process_time_events(self):
+        # Changes from the card manager arrive on the agent's thread; apply them here.
+        if self._pending_board is not None and self.stack.currentIndex() != PAGE_ALERT:
+            board, self._pending_board = self._pending_board, None
+            self.apply_new_board(board)
+        if self._pending_identify:
+            name, self._pending_identify = self._pending_identify, None
+            self.show_banner(f"📍 {name}", ms=5000)
+
         now_str = QTime.currentTime().toString("HH:mm")
 
         if self.active_alarm_time and now_str == self.active_alarm_time:

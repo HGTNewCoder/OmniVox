@@ -88,3 +88,40 @@ npm run assets     # re-run after changing images in assets/ (needs Pillow)
 
 To publish on GitHub Pages: **Settings → Pages → Source: GitHub Actions**.
 `.github/workflows/deploy-web.yml` then builds and deploys on every push to `main`.
+
+The Card Manager demo is at `/manager/` on the website (simulated devices).
+
+# Card Manager (master) and devices (clients)
+OmniVox is two programs:
+
+- **Client** (`app.py`, on each Raspberry Pi): the touchscreen board. Its cards and
+  sub-cards come from `json_page/board.json`. A small background service
+  (`client_agent.py`, port 8765) lets the Card Manager read and replace them; the
+  screen redraws within a second, without a restart.
+- **Master** (`master/server.py`, on any laptop on the same Wi-Fi): the Card
+  Manager. It finds every OmniVox, then opens an editor in the browser for card
+  names (English + Thai), logos, colours and sub-cards, with a live preview. Send
+  the cards to one device, or copy them to several.
+
+```bash
+# once, on the laptop: build the manager page
+cd web && npm install && npm run build && cd ..
+
+# then, whenever you want to edit cards
+python master/server.py                    # opens http://localhost:8800
+python master/server.py --device 192.168.1.20   # if discovery is blocked (guest Wi-Fi)
+```
+
+Discovery uses UDP port 47800; the device listens on TCP 8765. Both must be
+allowed on the network.
+
+**Protect a device with a PIN.** Anyone on the same Wi-Fi can reach a device.
+On each Pi, edit `device.json` (created on first run) and set `"pin": "1234"`,
+then restart the app. The manager asks for the PIN before showing or changing cards.
+
+**Try it without a Pi:** `python client_agent.py --port 8781 --name "Test bed"`
+runs a device service on its own, using this folder's cards.
+
+Each save keeps the previous `board.json` in `json_page/backups/` (last 10).
+Older installs with `cards.json`, `food.json`, … are converted to `board.json`
+automatically the first time the app starts.

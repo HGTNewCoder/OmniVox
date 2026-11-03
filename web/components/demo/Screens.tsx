@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { img } from "@/lib/asset";
-import { bathTranslate, CATEGORIES, categoryItems, MOODS } from "@/lib/i18n";
-import type { CatKey } from "@/lib/types";
+import { text, type BoardCard } from "@/lib/board";
+import { MOODS } from "@/lib/i18n";
 import type { Sim } from "./useSimulator";
 
 const STEP = 155; // box (140) + spacing (15), as in build_big_screen_page
@@ -88,20 +88,16 @@ export function WelcomeScreen({ sim }: Props) {
 }
 
 // ---------------------------------------------------------------- Main menu
-function MenuCard({ sim, card }: Props & { card: Sim["data"]["cards"][number] }) {
+function MenuCard({ sim, card }: Props & { card: BoardCard }) {
   const [pressed, flash] = usePressed();
   return (
-    <div
-      className={`card${pressed ? " pressed" : ""}`}
-      style={{ gridRow: card.row + 1, gridColumn: card.column + 1 }}
-      onClick={() => { flash(); sim.openCard(card.title); }}
-    >
+    <div className={`card${pressed ? " pressed" : ""}`} onClick={() => { flash(); sim.openCard(card.id); }}>
       <div className="card-top" style={{ background: card.color }}>
-        <div className="card-title">{sim.t(card.title)}</div>
-        <img src={img(card.image)} alt="" />
+        <div className="card-title">{text(card.title, sim.lang)}</div>
+        {card.image && <img src={sim.image(card.image)} alt="" />}
       </div>
       <div className="card-bottom">
-        <div className="card-desc">{sim.t(card.description.toUpperCase())}</div>
+        <div className="card-desc">{text(card.description, sim.lang)}</div>
         <button className="card-btn">{sim.t("TALK WITH US")}</button>
       </div>
     </div>
@@ -111,13 +107,15 @@ function MenuCard({ sim, card }: Props & { card: Sim["data"]["cards"][number] })
 export function MenuScreen({ sim }: Props) {
   const { t, lang, today } = sim;
   const [bellPressed, flashBell] = usePressed(200);
+  const cards = sim.board.cards.filter((c) => c.visible);
+  const rows = Math.max(1, Math.ceil(cards.length / 4));
   const date = !today
-    ? " "
+    ? " "
     : lang === "th"
       ? today.toLocaleDateString("th-TH", { dateStyle: "full" })
       : today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   return (
-    <section className="page pg-menu">
+    <section className={`page pg-menu rows-${rows}`}>
       <div className="mm-header">
         <div className="mm-titles">
           <div className="mm-title">{t("MY DAILY WELL-BEING")}</div>
@@ -125,8 +123,8 @@ export function MenuScreen({ sim }: Props) {
         </div>
         <button className="lang-btn" onClick={sim.toggleLang}>{lang === "th" ? "THAI / ไทย" : "ENGLISH"}</button>
       </div>
-      <div className="mm-grid">
-        {sim.data.cards.map((c) => <MenuCard key={c.title} sim={sim} card={c} />)}
+      <div className="mm-grid" style={{ gridTemplateRows: `repeat(${rows}, 1fr) ${rows > 2 ? 96 : 118}px` }}>
+        {cards.map((c) => <MenuCard key={c.id} sim={sim} card={c} />)}
         <div className={`bell${bellPressed ? " pressed" : ""}`} onClick={() => { flashBell(); sim.callForHelp(); }}>
           <img src={img("bell")} alt="" />
           <div className="bell-text">
@@ -140,11 +138,11 @@ export function MenuScreen({ sim }: Props) {
   );
 }
 
-// ---------------------------------------------------------------- Category pages
-export function CategoryScreen({ sim, cat }: Props & { cat: CatKey }) {
-  const cfg = CATEGORIES[cat];
-  const items = categoryItems(sim.data, cat, sim.lang);
-  const idx = Math.min(sim.cur[cat], Math.max(0, items.length - 1));
+// ---------------------------------------------------------------- List & phrases pages
+export function ListScreen({ sim, card }: Props & { card: BoardCard }) {
+  const textOnly = card.type === "phrases";
+  const items = card.items.map((it) => text(it.label, sim.lang));
+  const idx = Math.min(sim.cur[card.id] ?? 0, Math.max(0, items.length - 1));
   const scale = useContext(ScaleContext);
   const strip = useRef<HTMLDivElement>(null);
   const lockUntil = useRef(0);
@@ -152,7 +150,7 @@ export function CategoryScreen({ sim, cat }: Props & { cat: CatKey }) {
 
   // Restore the strip position when the page is shown (hbar.setValue(idx * total_step)).
   useLayoutEffect(() => {
-    if (!strip.current || cfg.textOnly) return;
+    if (!strip.current || textOnly) return;
     lockUntil.current = Date.now() + 300;
     strip.current.style.scrollBehavior = "auto";
     strip.current.scrollLeft = idx * STEP;
@@ -172,9 +170,9 @@ export function CategoryScreen({ sim, cat }: Props & { cat: CatKey }) {
   }, []);
 
   const onScroll = () => {
-    if (cfg.textOnly || !strip.current || Date.now() < lockUntil.current) return; // Recommend: no-op
+    if (textOnly || !strip.current || Date.now() < lockUntil.current) return; // phrases: no-op
     const i = Math.round(strip.current.scrollLeft / STEP);
-    if (i >= 0 && i < items.length) sim.scrolledTo(cat, i);
+    if (i >= 0 && i < items.length) sim.scrolledTo(card.id, i);
   };
 
   // Mouse drag-to-scroll, like QScroller's LeftMouseButtonGesture.
@@ -196,20 +194,26 @@ export function CategoryScreen({ sim, cat }: Props & { cat: CatKey }) {
 
   const click = (i: number) => {
     if (drag.current.moved) { drag.current.moved = false; return; }
-    if (!cfg.textOnly && strip.current) {
+    if (!textOnly && strip.current) {
       lockUntil.current = Date.now() + 800;
       strip.current.scrollLeft = i * STEP;
     }
-    sim.selectItem(cat, i);
+    sim.selectItem(card, i);
   };
+
+  const pic = (i: number) => card.items[i]?.image ?? "";
 
   return (
     <section className="page pg-cat">
-      <div className="pg-header">{sim.t(cfg.title)}</div>
-      <div className="big-screen" style={cfg.textOnly ? { background: cfg.color } : undefined}>
-        {cfg.textOnly
-          ? <div className="bs-text">{items[idx]}</div>
-          : items.length > 0 && <CoverImage key={`${cat}-${idx}-${items[idx]}`} src={img(`${cfg.prefix}_${idx}`)} alt={items[idx]} bg={cfg.color} />}
+      <div className="pg-header">{text(card.page_title, sim.lang)}</div>
+      <div className="big-screen" style={textOnly ? { background: card.accent } : undefined}>
+        {items.length === 0
+          ? <div className="bs-fallback" style={{ background: card.accent }}>—</div>
+          : textOnly
+            ? <div className="bs-text">{items[idx]}</div>
+            : pic(idx)
+              ? <CoverImage key={`${card.id}-${idx}-${pic(idx)}`} src={sim.image(pic(idx))} alt={items[idx]} bg={card.accent} />
+              : <div className="bs-fallback" style={{ background: card.accent }}>{items[idx]}</div>}
       </div>
       <div
         className="strip"
@@ -222,9 +226,9 @@ export function CategoryScreen({ sim, cat }: Props & { cat: CatKey }) {
       >
         {items.map((name, i) => (
           <button
-            key={i}
-            className={`box${cfg.large ? " large" : ""}${cfg.textOnly && i === idx ? " sel" : ""}`}
-            style={{ "--bc": cfg.color } as CSSProperties}
+            key={card.items[i].id}
+            className={`box${card.large_text ? " large" : ""}${textOnly && i === idx ? " sel" : ""}`}
+            style={{ "--bc": card.accent } as CSSProperties}
             onClick={() => click(i)}
           >
             <span>{name}</span>
@@ -232,9 +236,9 @@ export function CategoryScreen({ sim, cat }: Props & { cat: CatKey }) {
         ))}
       </div>
       {/* Warm up the next photos so scrolling feels instant */}
-      {!cfg.textOnly && (
+      {!textOnly && (
         <div hidden>
-          {[idx + 1, idx + 2].filter((n) => n < items.length).map((n) => <img key={n} src={img(`${cfg.prefix}_${n}`)} alt="" />)}
+          {[idx + 1, idx + 2].filter((n) => n < items.length && pic(n)).map((n) => <img key={n} src={sim.image(pic(n))} alt="" />)}
         </div>
       )}
       <button className="back-btn" onClick={() => sim.go("menu")}>{sim.t("GO BACK")}</button>
@@ -242,27 +246,28 @@ export function CategoryScreen({ sim, cat }: Props & { cat: CatKey }) {
   );
 }
 
-// ---------------------------------------------------------------- Bathroom
-function BathroomCard({ sim, item }: Props & { item: Sim["data"]["bathroom"]["items"][number] }) {
+// ---------------------------------------------------------------- Grid page (Bathroom)
+function GridTile({ sim, card, idx }: Props & { card: BoardCard; idx: number }) {
   const [pressed, flash] = usePressed();
+  const item = card.items[idx];
   return (
-    <div
-      className={`bcard${pressed ? " pressed" : ""}`}
-      style={{ gridRow: item.row + 1, gridColumn: item.col + 1 }}
-      onClick={() => { flash(); sim.selectBathroom(item); }}
-    >
-      <div className="bcard-img" style={{ backgroundImage: `url('${img(item.image)}')` }} />
-      <div className="bcard-desc">{bathTranslate(sim.data, item.id, sim.lang)}</div>
+    <div className={`bcard${pressed ? " pressed" : ""}`} onClick={() => { flash(); sim.selectGridItem(card, idx); }}>
+      <div
+        className="bcard-img"
+        style={item.image ? { backgroundImage: `url('${sim.image(item.image)}')` } : { background: item.color ?? card.accent }}
+      />
+      <div className="bcard-desc">{text(item.label, sim.lang)}</div>
     </div>
   );
 }
 
-export function BathroomScreen({ sim }: Props) {
+export function GridScreen({ sim, card }: Props & { card: BoardCard }) {
+  const cols = card.items.length > 6 ? 4 : 3;
   return (
     <section className="page pg-bath">
-      <div className="pg-header" style={{ padding: "20px 0 16px" }}>{sim.t("BATHROOM ASSISTANCE")}</div>
-      <div className="bath-grid">
-        {sim.data.bathroom.items.map((b) => <BathroomCard key={b.id} sim={sim} item={b} />)}
+      <div className="pg-header" style={{ padding: "20px 0 16px" }}>{text(card.page_title, sim.lang)}</div>
+      <div className="bath-grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+        {card.items.map((it, i) => <GridTile key={it.id} sim={sim} card={card} idx={i} />)}
       </div>
       <button className="back-btn" style={{ marginBottom: 20 }} onClick={() => sim.go("menu")}>{sim.t("GO BACK")}</button>
     </section>

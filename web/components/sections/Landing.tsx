@@ -1,5 +1,5 @@
-import { img } from "@/lib/asset";
-import { translate } from "@/lib/i18n";
+import { publicUrl } from "@/lib/asset";
+import { heroImages } from "@/lib/hero";
 import type { AppData } from "@/lib/types";
 
 const REPO = "https://github.com/HGTNewCoder/OmniVox";
@@ -8,7 +8,7 @@ export function Nav() {
   return (
     <header className="nav">
       <div className="wrap nav-inner">
-        <a className="brand" href="#top" aria-label="OmniVox home">
+        <a className="brand" href={publicUrl("")} aria-label="OmniVox home">
           <span className="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 32 32" width="28" height="28">
               <circle cx="16" cy="16" r="15" fill="currentColor" />
@@ -18,10 +18,11 @@ export function Nav() {
           OmniVox
         </a>
         <nav className="nav-links" aria-label="Sections">
-          <a href="#demo">Live demo</a>
-          <a href="#features">Features</a>
-          <a href="#how">How it works</a>
-          <a href="#hardware">Hardware</a>
+          {/* Absolute links so the menu also works from /team and other pages */}
+          <a href={`${publicUrl("")}#demo`}>Live demo</a>
+          <a href={`${publicUrl("")}#how`}>How it works</a>
+          <a href={publicUrl("manager/")}>Card Manager</a>
+          <a href={publicUrl("team/")}>Team</a>
         </nav>
         <a className="btn btn-ghost btn-sm" href={REPO} target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
@@ -29,23 +30,25 @@ export function Nav() {
   );
 }
 
-/** Total number of things a patient can tap to say, counted from json_page. */
+/** Total number of things a patient can tap to say, counted from json_page/board.json. */
 export function countChoices(data: AppData) {
-  const cats = Object.values(data.categories).reduce((n, c) => n + (c.en?.length ?? 0), 0);
-  return cats + data.bathroom.items.length + 2 /* yes/no */ + 5 /* moods */;
+  const cards = data.board.cards.filter((c) => c.visible);
+  const items = cards.reduce((n, c) => n + c.items.length, 0);
+  const yesNo = cards.some((c) => c.type === "yesno") ? 2 : 0;
+  return items + yesNo + 5 /* moods */;
 }
 
 export function Hero({ data }: { data: AppData }) {
+  const [h1, h2, h3, h4] = heroImages();
   return (
     <section className="hero">
       <div className="wrap hero-grid">
         <div className="hero-copy">
-          <p className="eyebrow">Augmentative communication · Raspberry Pi</p>
-          <h1>A voice for every bedside.</h1>
+          <p className="eyebrow">Augmentative communication</p>
+          <h1>A voice for Mr. D.</h1>
           <p className="lede">
             OmniVox is a touchscreen communication board for patients and older adults who find it hard to speak.
-            Tap a picture — <em>“I feel worried”</em>, <em>“Turn me to my side”</em>, <em>“I need my glasses”</em> — and
-            it says it out loud, in English or Thai.
+            Tap a picture and it says it out loud, in English or Thai.
           </p>
           <div className="hero-cta">
             <a className="btn btn-primary" href="#demo">Try the live demo</a>
@@ -53,118 +56,126 @@ export function Hero({ data }: { data: AppData }) {
           </div>
           <dl className="stats">
             <div><dt>{countChoices(data)}</dt><dd>tap-to-speak choices</dd></div>
-            <div><dt>{data.cards.length}</dt><dd>care categories</dd></div>
+            <div><dt>{data.board.cards.filter((c) => c.visible).length}</dt><dd>care categories</dd></div>
             <div><dt>{Object.keys(data.translations).length}</dt><dd>languages, one tap to switch</dd></div>
-            <div><dt>1</dt><dd>big red call button</dd></div>
           </dl>
         </div>
         <div className="hero-art" aria-hidden="true">
-          <div className="bubble b1"><img src={img("feeling_7")} alt="" /><span>I feel lonely</span></div>
-          <div className="bubble b2"><img src={img("position_3")} alt="" /><span>Turn me to my side</span></div>
-          <div className="bubble b3"><img src={img("food_0")} alt="" /><span>Pad Kra Pao</span></div>
-          <div className="bubble b4"><span>หิว</span><small>“Hungry” in Thai</small></div>
-          <div className="bell-orb"><img src={img("bell")} alt="" /></div>
+          <div className="bubble b1"><img src={h1.src} alt="" /><span>{h1.caption}</span></div>
+          <div className="bubble b2"><img src={h2.src} alt="" /><span>{h2.caption}</span></div>
+          <div className="bubble b3"><img src={h3.src} alt="" /><span>{h3.caption}</span></div>
+          <div className="bubble b4"><img src={h4.src} alt="" /><span>{h4.caption}</span></div>
         </div>
       </div>
     </section>
   );
 }
 
-const FEATURE_COPY: Record<string, { copy: string; key?: keyof AppData["categories"] | "bathroom"; unit?: string }> = {
-  "FOOD": { copy: "Thai dishes with photos — curries, noodles, rice plates and street food.", key: "food", unit: "dishes" },
-  "FEELING": { copy: "Emotions from excited to worried, each spoken as a sentence: “I feel …”.", key: "feeling", unit: "feelings" },
-  "POSITION & COMFORT": { copy: "Ask to be turned, pulled up, moved to a wheelchair, or made warmer or cooler.", key: "position", unit: "requests" },
-  "BATHROOM": { copy: "Picture cards for toilet, shower, washing, clothes, diaper and grooming.", key: "bathroom", unit: "needs" },
-  "YES / NO": { copy: "Huge, unmistakable answer cards for staff questions — spoken and shown full-screen." },
-  "ENTERTAINMENT": { copy: "Pick a channel or app: sports, movies, news, Thai TV, YouTube.", key: "entertainment", unit: "channels" },
-  "RECOMMEND ANSWER": { copy: "Ready-made everyday phrases — glasses, lights, visitors, the doctor.", key: "recommend", unit: "phrases" },
-  "CLOCK": { copy: "Set an alarm or a countdown timer with oversized arrow controls." },
+export function ManagerTeaser() {
+  return (
+    <section id="manager" className="mgr-teaser">
+      <div className="wrap mgr-teaser-grid">
+        <div>
+          <p className="eyebrow">Card Manager</p>
+          <h2>Change the cards from a laptop.</h2>
+          <p>
+            The master finds every OmniVox on the same Wi-Fi and lets a caregiver add cards, rename them, change
+            their pictures and edit the sub-cards inside.
+          </p>
+          <div className="hero-cta">
+            <a className="btn btn-primary" href={publicUrl("manager/")}>Open the Card Manager demo</a>
+          </div>
+        </div>
+        <ol className="mgr-steps">
+          <li><span className="flow-n">1</span><div><h4>Find</h4><p>The master finds every OmniVox on the Wi-Fi.</p></div></li>
+          <li><span className="flow-n">2</span><div><h4>Edit</h4><p>Cards, names in English and Thai, logos, colours and sub-cards.</p></div></li>
+          <li><span className="flow-n">3</span><div><h4>Send</h4><p>The device saves the new cards and redraws its menu.</p></div></li>
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+type Flow = { dir: "to" | "from"; label: string };
+type Part = {
+  side: "top" | "left" | "right" | "bottom";
+  icon: keyof typeof ICONS;
+  title: string;
+  sub: string;
+  flows: Flow[];
 };
 
-export function Features({ data }: { data: AppData }) {
-  return (
-    <section id="features" className="features">
-      <div className="wrap">
-        <div className="section-head">
-          <p className="eyebrow">What it does</p>
-          <h2>Everything a patient needs to say, one tap away.</h2>
-          <p>
-            Eight large, high-contrast categories cover daily care, comfort, feelings and fun. Every card is a big touch
-            target designed for shaky hands and tired eyes.
-          </p>
-        </div>
-        <div className="feature-grid">
-          {data.cards.map((c) => {
-            const f = FEATURE_COPY[c.title] ?? { copy: c.description };
-            let count = "";
-            let eg = "";
-            if (f.key === "bathroom") {
-              count = `${data.bathroom.items.length} ${f.unit}`;
-            } else if (f.key) {
-              const list = data.categories[f.key].en ?? [];
-              count = `${list.length} ${f.unit}`;
-              eg = list.slice(0, 3).map((s) => s.replace(/\s*\(.*\)/, "")).join(" · ");
-            }
-            return (
-              <article className="feature" key={c.title}>
-                <div className="feature-art" style={{ background: c.color }}>
-                  <img src={img(c.image)} alt="" loading="lazy" />
-                </div>
-                <div className="feature-body">
-                  {count && <span className="count">{count}</span>}
-                  <h3>{translate(data, c.title, "en")}</h3>
-                  <p>{f.copy}</p>
-                  {eg && <div className="eg">e.g. {eg}</div>}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
+const ICONS = {
+  screen: <><rect x="3" y="5" width="18" height="12" rx="2" /><path d="M9 20h6M12 17v3" /></>,
+  laptop: <><rect x="5" y="5" width="14" height="10" rx="1.5" /><path d="M2.5 18.5h19" /></>,
+  voice: <><path d="M5 10v4M9 7v10M13 4v16M17 8v8M21 11v2" /></>,
+  button: <><circle cx="12" cy="12" r="4" /><circle cx="12" cy="12" r="8.5" /></>,
+  chip: <><rect x="6" y="6" width="12" height="12" rx="2" /><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4" /></>,
+};
 
-const HIGHLIGHTS = [
+const PARTS: Part[] = [
   {
-    icon: "🗣️", title: "Natural neural voices",
-    body: <>Speech comes from Microsoft Edge neural TTS — <code>en-US-JennyNeural</code> and <code>th-TH-PremwadeeNeural</code>. A new tap instantly interrupts the previous phrase, so the board keeps up with the person.</>,
+    side: "top", icon: "screen", title: "Touchscreen", sub: "DSI display on the Pi",
+    flows: [{ dir: "to", label: "Taps" }, { dir: "from", label: "Pages & pictures" }],
   },
   {
-    icon: "🇹🇭", title: "Truly bilingual",
-    body: <>Every label, button, date and spoken phrase switches between English and Thai with one button. If Thai speech fails, OmniVox falls back to the English phrase so nothing goes unsaid.</>,
+    side: "left", icon: "laptop", title: "Card Manager", sub: "master/server.py on a laptop, same Wi-Fi",
+    flows: [{ dir: "from", label: "Answers “who's there?” (UDP 47800)" }, { dir: "to", label: "New cards & pictures (HTTP 8765)" }],
   },
   {
-    icon: "🔔", title: "Help is always visible",
-    body: <>The <b>Call for help</b> bar sits on the home screen, and choosing <i>“In pain”</i> at check-in flags staff. Alerts take over the full screen with a looping sound until someone turns them off.</>,
+    side: "right", icon: "voice", title: "Voice", sub: "edge-tts makes the speech (online), pygame plays it on the speaker",
+    flows: [{ dir: "from", label: "The phrase to say" }],
   },
   {
-    icon: "⏰", title: "Alarms & timers",
-    body: <>Big arrow controls set an alarm or a countdown — for medication, a visit, or a nap. Upcoming alarms and running timers show on the welcome screen.</>,
-  },
-  {
-    icon: "📝", title: "Content lives in JSON",
-    body: <>Menus, phrases and translations are plain files in <code>json_page/</code>. Caregivers can add a local dish or a favourite channel without touching code.</>,
-  },
-  {
-    icon: "🔋", title: "Sleeps like a phone",
-    body: <>A physical button toggles the backlight and the screen dims itself after five idle minutes, always waking on the friendly welcome check-in.</>,
+    side: "bottom", icon: "button", title: "GPIO button", sub: "Push button on GPIO 17 (pin 11)",
+    flows: [{ dir: "to", label: "Press: screen on / off" }],
   },
 ];
 
-export function Highlights() {
+function Icon({ name }: { name: keyof typeof ICONS }) {
   return (
-    <section className="highlights">
-      <div className="wrap hl-grid">
-        {HIGHLIGHTS.map((h) => (
-          <article className="hl" key={h.title}>
-            <div className="hl-icon" aria-hidden="true">{h.icon}</div>
-            <h3>{h.title}</h3>
-            <p>{h.body}</p>
-          </article>
+    <svg className="hwf-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {ICONS[name]}
+    </svg>
+  );
+}
+
+/** How the parts talk to each other, with the Raspberry Pi in the middle. */
+function HardwareFlow() {
+  return (
+    <figure className="hwf" aria-labelledby="hwf-cap">
+      <figcaption id="hwf-cap" className="hwf-cap">
+        <span><i className="hwf-key to" /> into the Raspberry Pi</span>
+        <span><i className="hwf-key from" /> out of the Raspberry Pi</span>
+      </figcaption>
+      <div className="hwf-grid">
+        <div className="hwf-pi">
+          <div className="hwf-head"><Icon name="chip" /><div><b>Raspberry Pi</b><small>runs everything on the device</small></div></div>
+          <ul>
+            <li><code>app.py</code> touch UI</li>
+            <li><code>board.json</code> the cards</li>
+            <li><code>client_agent.py</code> Wi-Fi link</li>
+            <li><code>gpio_button_daemon.py</code> screen sleep</li>
+          </ul>
+        </div>
+        {PARTS.map((p) => (
+          <div key={p.side} className={`hwf-arm hwf-${p.side}`}>
+            <div className="hwf-wire" data-side={p.side}>
+              <div className="hwf-line" aria-hidden="true">
+                {p.flows.map((f, i) => <i key={i} className={f.dir} style={{ animationDelay: `${i * -1.2}s` }} />)}
+              </div>
+              <ul className="hwf-labels">
+                {p.flows.map((f) => <li key={f.label} className={f.dir}>{f.label}</li>)}
+              </ul>
+            </div>
+            <div className="hwf-part">
+              <div className="hwf-head"><Icon name={p.icon} /><div><b>{p.title}</b><small>{p.sub}</small></div></div>
+            </div>
+          </div>
         ))}
       </div>
-    </section>
+    </figure>
   );
 }
 
@@ -184,62 +195,7 @@ export function HowItWorks() {
           <li><span className="flow-n">4</span><h4>Speak</h4><p><code>pygame</code> plays it, cancelling anything already playing.</p></li>
         </ol>
 
-        <div
-          className="arch"
-          role="img"
-          aria-label="Architecture: the PyQt6 user interface reads JSON content and sends phrases to the speech service; a GPIO daemon controls the backlight; alerts play an alarm sound."
-        >
-          <div className="arch-col">
-            <div className="arch-box tone-a">
-              <h5>Touch UI <small>app.py · PyQt6</small></h5>
-              <p>12 screens in a <code>QStackedWidget</code>: welcome check-in, menu, 6 category pages, clock, alert and full-screen item view.</p>
-            </div>
-            <div className="arch-box tone-b">
-              <h5>Content <small>json_page/*.json</small></h5>
-              <p>Cards, food, feelings, positions, bathroom, entertainment, recommendations and the EN↔TH dictionary.</p>
-            </div>
-          </div>
-          <div className="arch-col">
-            <div className="arch-box tone-c">
-              <h5>SpeechService <small>edge-tts + pygame</small></h5>
-              <p>Queue + worker thread with a stop flag, so the newest tap always wins. Falls back to English if Thai synthesis fails.</p>
-            </div>
-            <div className="arch-box tone-d">
-              <h5>Alerts &amp; time <small>QTimer · QSoundEffect</small></h5>
-              <p>A 1-second tick checks alarms and timers; the bell and “In pain” trigger a full-screen alert with <code>alarm.wav</code>.</p>
-            </div>
-          </div>
-          <div className="arch-col">
-            <div className="arch-box tone-e">
-              <h5>Screen manager <small>gpio_button_daemon.py</small></h5>
-              <p><code>gpiozero</code> button on GPIO 17 toggles the backlight via <code>/sys/class/backlight</code>; a monitor thread sleeps the screen after 5 idle minutes.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export function Hardware() {
-  const parts = [
-    ["Raspberry Pi 4 or 5", "Raspberry Pi OS Bookworm, 64-bit"],
-    ["DSI touchscreen", "Waveshare display with software brightness control"],
-    ["Momentary push button", "GPIO 17 (physical pin 11) to ground — screen on/off"],
-    ["Speaker", "3.5 mm, USB or HDMI audio for spoken phrases and alarms"],
-    ["Python 3.8+", "PyQt6 · edge-tts · pygame · gpiozero"],
-  ];
-  return (
-    <section id="hardware" className="hardware">
-      <div className="wrap hw-grid">
-        <div>
-          <p className="eyebrow">Hardware</p>
-          <h2>Built from parts you can buy today.</h2>
-          <p>OmniVox runs full-screen on a Raspberry Pi with a touch display — small enough to mount on a bed rail or set on a tray table.</p>
-        </div>
-        <ul className="parts">
-          {parts.map(([b, s]) => <li key={b}><b>{b}</b><span>{s}</span></li>)}
-        </ul>
+        <HardwareFlow />
       </div>
     </section>
   );
@@ -251,6 +207,7 @@ export function Footer() {
       <div className="wrap footer-inner">
         <span className="brand small">OmniVox</span>
         <span>An open-source communication board for care settings.</span>
+        <a href={publicUrl("team/")}>Team &amp; acknowledgements</a>
         <a href={REPO} target="_blank" rel="noopener noreferrer">github.com/HGTNewCoder/OmniVox</a>
       </div>
     </footer>

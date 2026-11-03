@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { publicUrl, img } from "@/lib/asset";
-import { bathTranslate, CATEGORIES, categoryItems, MENU_NAV, MOODS, translate } from "@/lib/i18n";
-import type { AppData, BathroomItem, CatKey, Lang } from "@/lib/types";
+import { bundledImage, publicUrl, type ImageResolver } from "@/lib/asset";
+import { spoken, text, type Board, type BoardCard } from "@/lib/board";
+import { MOODS, translate } from "@/lib/i18n";
+import type { AppData, Lang } from "@/lib/types";
 
-export type PageKey = "welcome" | "menu" | CatKey | "bathroom" | "yesno" | "clock" | "alert" | "full";
-export type TryKey = "mood" | "lang" | "speak" | "bathroom" | "yesno" | "bell" | "clock" | "power";
+/** Fixed pages, or "c:<card id>" for a page built from the board. */
+export type PageKey = "welcome" | "menu" | "yesno" | "clock" | "alert" | "full" | `c:${string}`;
+export type TryKey = "mood" | "lang" | "speak" | "bathroom" | "yesno" | "bell" | "power";
 export type ClockMode = "ALARM" | "TIMER";
 
 export interface FullItem {
@@ -20,20 +22,22 @@ export interface FullItem {
 export interface SimOptions {
   muted: boolean;
   onSpeak: (text: string, lang: Lang, fallbackText?: string | null, fallbackLang?: Lang | null) => void;
-  onTry: (key: TryKey) => void;
+  onTry?: (key: TryKey) => void;
+  resolveImage?: ImageResolver;
+  /** Show "Cards updated" and leave card pages when the board changes (default true). */
+  announceUpdates?: boolean;
 }
 
 export const IDLE_TIMEOUT_MS = 300_000; // gpio_button_daemon.IDLE_TIMEOUT_SECONDS
 const pad = (n: number) => String(n).padStart(2, "0");
-const ZERO_CUR: Record<CatKey, number> = { food: 0, feeling: 0, position: 0, entertainment: 0, recommend: 0 };
 
 /** All state and behaviour of WellBeingApp, as a React hook. */
-export function useSimulator(data: AppData, opts: SimOptions) {
+export function useSimulator(translations: AppData["translations"], board: Board, opts: SimOptions) {
   const [page, setPage] = useState<PageKey>("welcome");
   const [lang, setLang] = useState<Lang>("en");
   const [alarm, setAlarm] = useState<string | null>(null);
   const [timer, setTimer] = useState(0);
-  const [cur, setCur] = useState(ZERO_CUR);
+  const [cur, setCur] = useState<Record<string, number>>({});
   const [clock, setClock] = useState<{ mode: ClockMode; h: number; m: number }>({ mode: "ALARM", h: 0, m: 0 });
   const [full, setFull] = useState<FullItem | null>(null);
   const [fullOk, setFullOk] = useState(false);
@@ -45,6 +49,7 @@ export function useSimulator(data: AppData, opts: SimOptions) {
   const [idleLeft, setIdleLeft] = useState(IDLE_TIMEOUT_MS / 1000);
   const [today, setToday] = useState<Date | null>(null);
   const [run, setRun] = useState(0); // bumps on restart so the welcome animation replays
+  const [banner, setBanner] = useState<{ text: string; id: number } | null>(null);
 
   const lastActivity = useRef(Date.now());
   const timeouts = useRef(new Set<ReturnType<typeof setTimeout>>());
@@ -52,7 +57,9 @@ export function useSimulator(data: AppData, opts: SimOptions) {
   const optsRef = useRef(opts);
   optsRef.current = opts;
 
-  const t = useCallback((s: string) => translate(data, s, lang), [data, lang]);
+  const t = useCallback((s: string) => translate(translations, s, lang), [translations, lang]);
+  const image = useCallback((p: string) => (opts.resolveImage ?? bundledImage)(p), [opts.resolveImage]);
+  const cardById = useCallback((id: string) => board.cards.find((c) => c.id === id), [board]);
 
   const later = useCallback((fn: () => void, ms: number) => {
     const id = setTimeout(() => { timeouts.current.delete(id); fn(); }, ms);
@@ -64,7 +71,7 @@ export function useSimulator(data: AppData, opts: SimOptions) {
       optsRef.current.onSpeak(text, lang, lang === "th" ? fallbackText : null, lang === "th" && fallbackText ? "en" : null),
     [lang],
   );
-  const tried = (k: TryKey) => optsRef.current.onTry(k);
+  const tried = (k: TryKey) => optsRef.current.onTry?.(k);
 
   const nowClock = () => { const d = new Date(); return { h: d.getHours(), m: d.getMinutes() }; };
 
@@ -79,6 +86,20 @@ export function useSimulator(data: AppData, opts: SimOptions) {
   }, []);
 
   useEffect(() => { if (audio.current) audio.current.muted = opts.muted; }, [opts.muted]);
+
+  // New cards arrived (WellBeingApp.apply_new_board): leave card pages, show a banner.
+  const firstBoard = useRef(board);
+  useEffect(() => {
+    if (board === firstBoard.current || optsRef.current.announceUpdates === false) return;
+    setPage((p) => (p === "full" || p.startsWith("c:") ? "menu" : p));
+    setBanner({ text: translate(translations, "CARDS UPDATED", lang), id: Date.now() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [board]);
+  useEffect(() => {
+    if (!banner) return;
+    const id = setTimeout(() => setBanner(null), 3500);
+    return () => clearTimeout(id);
+  }, [banner]);
 
   const triggerAlert = useCallback((text: string) => {
     const emergency = text.includes("Emergency") || text.toLowerCase().includes("pain");
@@ -131,36 +152,44 @@ export function useSimulator(data: AppData, opts: SimOptions) {
     }
   };
 
-  const openCard = (title: string) => { const p = MENU_NAV[title]; if (p) setPage(p as PageKey); };
+  /** MainMenuPage.navigate */
+  const openCard = (id: string) => {
+    const card = cardById(id);
+    if (!card) return;
+    setPage(card.type === "yesno" ? "yesno" : card.type === "clock" ? "clock" : `c:${card.id}`);
+  };
 
   const callForHelp = () => { tried("bell"); triggerAlert("Emergency! Staff has been alerted!"); };
 
-  const selectItem = (key: CatKey, idx: number) => {
-    const cfg = CATEGORIES[key];
-    const list = categoryItems(data, key, lang);
-    setCur((c) => ({ ...c, [key]: idx }));
-    if (cfg.speak) {
-      const say = cfg.say ?? ((x: string) => x);
-      const en = data.categories[key].en?.[idx];
-      speak(say(list[idx], lang), en ? say(en, "en") : null);
-      if (key === "feeling") tried("speak");
+  /** A tap on a list or phrases card's item. */
+  const selectItem = (card: BoardCard, idx: number) => {
+    const item = card.items[idx];
+    if (!item) return;
+    setCur((c) => ({ ...c, [card.id]: idx }));
+    if (card.type === "phrases" || card.speak) {
+      speak(spoken(card, item, lang), spoken(card, item, "en"));
+      tried("speak");
     }
-    if (cfg.textOnly) return;
-    setFull({ name: list[idx], image: img(`${cfg.prefix}_${idx}`), fallbackBg: cfg.color, back: key });
+    if (card.type === "phrases") return;
+    setFull({ name: text(item.label, lang), image: image(item.image), fallbackBg: card.accent, back: `c:${card.id}` });
     setPage("full");
   };
 
-  const scrolledTo = (key: CatKey, idx: number) => setCur((c) => (c[key] === idx ? c : { ...c, [key]: idx }));
+  const scrolledTo = (cardId: string, idx: number) =>
+    setCur((c) => (c[cardId] === idx ? c : { ...c, [cardId]: idx }));
 
-  const selectBathroom = (item: BathroomItem) => {
-    speak(bathTranslate(data, item.message, lang), translate(data, item.message, "en"));
+  /** A tap on a grid card's tile (BathroomPage.handle_bathroom_selection). */
+  const selectGridItem = (card: BoardCard, idx: number) => {
+    const item = card.items[idx];
+    if (!item) return;
+    speak(spoken(card, item, lang), spoken(card, item, "en"));
     tried("bathroom");
     setFull({
-      name: bathTranslate(data, item.id, lang),
-      sub: bathTranslate(data, item.message, lang),
-      image: img(item.image),
-      fallbackBg: item.color,
-      back: "bathroom",
+      name: text(item.label, lang),
+      sub: spoken(card, item, lang),
+      image: image(item.image),
+      fallbackBg: item.color ?? card.accent,
+      back: `c:${card.id}`,
     });
     setPage("full");
   };
@@ -182,13 +211,8 @@ export function useSimulator(data: AppData, opts: SimOptions) {
     });
 
   const confirmClock = () => {
-    if (clock.mode === "ALARM") {
-      setAlarm(`${pad(clock.h)}:${pad(clock.m)}`);
-    } else {
-      const secs = clock.h * 3600 + clock.m * 60;
-      setTimer(secs);
-      if (secs > 0) tried("clock");
-    }
+    if (clock.mode === "ALARM") setAlarm(`${pad(clock.h)}:${pad(clock.m)}`);
+    else setTimer(clock.h * 3600 + clock.m * 60);
     setClockMode(clock.mode);
     setPage("welcome");
   };
@@ -214,21 +238,22 @@ export function useSimulator(data: AppData, opts: SimOptions) {
     timeouts.current.forEach(clearTimeout);
     timeouts.current.clear();
     audio.current?.pause();
-    setPage("welcome"); setLang("en"); setAlarm(null); setTimer(0); setCur(ZERO_CUR);
+    setPage("welcome"); setLang("en"); setAlarm(null); setTimer(0); setCur({});
     setClock({ mode: "ALARM", ...nowClock() }); setFull(null); setFullOk(false); setMood(null);
-    setModal(false); setAnswer(null); setBacklight(true);
+    setModal(false); setAnswer(null); setBacklight(true); setBanner(null);
     lastActivity.current = Date.now();
     setIdleLeft(IDLE_TIMEOUT_MS / 1000);
     setRun((r) => r + 1);
   };
 
   return {
-    data, page, lang, alarm, timer, cur, clock, full, fullOk, alert, mood, modal, answer,
-    backlight, idleLeft, today, run, t,
-    go, toggleLang, selectMood, openCard, callForHelp, selectItem, scrolledTo, selectBathroom,
+    board, page, lang, alarm, timer, cur, clock, full, fullOk, alert, mood, modal, answer,
+    backlight, idleLeft, today, run, banner, t, image, cardById,
+    go, toggleLang, selectMood, openCard, callForHelp, selectItem, scrolledTo, selectGridItem,
     answerYesNo, setClockMode, spin, confirmClock, cancelAlarm: () => setAlarm(null),
     cancelTimer: () => setTimer(0), alertOff, fullBack, fullSelect, closeModal: () => setModal(false),
     power, simulateIdle, activity, reset,
+    showBanner: (message: string) => setBanner({ text: message, id: Date.now() }),
   };
 }
 

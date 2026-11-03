@@ -1,0 +1,1402 @@
+{
+  "version": 1,
+  "updated": "2026-11-03T03:45:19Z",
+  "cards": [
+    {
+      "id": "food",
+      "type": "list",
+      "title": {
+        "en": "Food",
+        "th": "อาหาร"
+      },
+      "description": {
+        "en": "Request food or specify meal type.",
+        "th": "ขออาหารหรือระบุเมนู"
+      },
+      "page_title": {
+        "en": "Food Menu",
+        "th": "เมนูอาหาร"
+      },
+      "color": "#AED6F1",
+      "accent": "#FDEBD0",
+      "image": "assets/food.png",
+      "visible": true,
+      "speak": false,
+      "speak_template": {
+        "en": "",
+        "th": ""
+      },
+      "large_text": false,
+      "items": [
+        {
+          "id": "pad-kra-pao-basil-stir-fry",
+          "label": {
+            "en": "Pad Kra Pao (Basil Stir-Fry)",
+            "th": "ผัดกระเพราหมู"
+          },
+          "image": "assets/food_0.png"
+        },
+        {
+          "id": "gai-pad-med-mamuang-cashew-chick",
+          "label": {
+            "en": "Gai Pad Med Mamuang (Cashew Chicken)",
+            "th": "ไก่ผัดเมล็ดมะม่วง"
+          },
+          "image": "assets/food_1.png"
+        },
+        {
+          "id": "pad-kana-moo-krob-crispy-pork-be",
+          "label": {
+            "en": "Pad Kana Moo Krob (Crispy Pork Belly with Chinese Broccoli)",
+            "th": "ผัดคะน้าหมูกรอบ"
+          },
+          "image": "assets/food_2.png"
+        },
+        {
+          "id": "pad-prik-king-dry-red-curry-stir",
+          "label": {
+            "en": "Pad Prik King (Dry Red Curry Stir-Fry)",
+            "th": "ผัดพริกแกงหมู"
+          },
+          "image": "assets/food_3.png"
+        },
+        {
+          "id": "pad-pak-ruam-mixed-vegetable-sti",
+          "label": {
+            "en": "Pad Pak Ruam (Mixed Vegetable Stir-Fry)",
+            "th": "ผัดผักรวม"
+          },
+          "image": "assets/food_4.png"
+        },
+        {
+          "id": "moo-ping-grilled-pork-skewers",
+          "label": {
+            "en": "Moo Ping (Grilled Pork Skewers)",
+            "th": "หมูปิ้ง"
+          },
+          "image": "assets/food_5.png"
+        },
+        {
+          "id": "tod-mun-pla-thai-fish-cakes",
+          "label": {
+            "en": "Tod Mun Pla (Thai Fish Cakes)",
+            "th": "ทอดมันปลา"
+          },
+          "image": "assets/food_6.png"
+        },
+        {
+          "id": "gaeng-keow-wan-green-curry",
+          "label": {
+            "en": "Gaeng Keow Wan (Green Curry)",
+            "th": "แกงเขียวหวาน"
+          },
+          "image": "assets/food_7.png"
+        },
+        {
+          "id": "gaeng-daeng-red-curry",
+          "label": {
+            "en": "Gaeng Daeng (Red Curry)",
+            "th": "แกงแดง"
+          },
+          "image": "assets/food_8.png"
+        },
+        {
+          "id": "gaeng-massaman-massaman-curry",
+          "label": {
+            "en": "Gaeng Massaman (Massaman Curry)",
+            "th": "แกงมัสมั่น"
+          },
+          "image": "assets/food_9.png"
+        },
+        {
+          "id": "gaeng-panang-panang-curry",
+          "label": {
+            "en": "Gaeng Panang (Panang Curry)",
+            "th": "แกงพะแนง"
+          },
+          "image": "assets/food_10.png"
+        },
+        {
+          "id": "gaeng-som-sour-curry",
+          "label": {
+            "en": "Gaeng Som (Sour Curry)",
+            "th": "แกงส้ม"
+          },
+          "image": "assets/food_11.png"
+        },
+        {
+          "id": "gaeng-phed-ped-yang-roast-duck-r",
+          "label": {
+            "en": "Gaeng Phed Ped Yang (Roast Duck Red Curry)",
+            "th": "แกงพืชเป็ดย่าง"
+          },
+          "image": "assets/food_12.png"
+        },
+        {
+          "id": "pad-thai",
+          "label": {
+            "en": "Pad Thai",
+            "th": "ผัดไทย"
+          },
+          "image": "assets/food_13.png"
+        },
+        {
+          "id": "pad-see-ew-stir-fried-wide-noodl",
+          "label": {
+            "en": "Pad See Ew (Stir-Fried Wide Noodles)",
+            "th": "ผัดซีอิ๊ว"
+          },
+          "image": "assets/food_14.png"
+        },
+        {
+          "id": "pad-kee-mao-drunken-noodles",
+          "label": {
+            "en": "Pad Kee Mao (Drunken Noodles)",
+            "th": "ผัดขี้เมา"
+          },
+          "image": "assets/food_15.png"
+        },
+        {
+          "id": "khao-pad-thai-fried-rice",
+          "label": {
+            "en": "Khao Pad (Thai Fried Rice)",
+            "th": "ข้าวผัดไทย"
+          },
+          "image": "assets/food_16.png"
+        },
+        {
+          "id": "khao-pad-sapparod-pineapple-frie",
+          "label": {
+            "en": "Khao Pad Sapparod (Pineapple Fried Rice)",
+            "th": "ข้าวผัดสัปปะรด"
+          },
+          "image": "assets/food_17.png"
+        },
+        {
+          "id": "khao-man-gai-hainanese-chicken-r",
+          "label": {
+            "en": "Khao Man Gai (Hainanese Chicken Rice)",
+            "th": "ข้าวมันไก่"
+          },
+          "image": "assets/food_18.png"
+        },
+        {
+          "id": "khao-kha-moo-braised-pork-leg-on",
+          "label": {
+            "en": "Khao Kha Moo (Braised Pork Leg on Rice)",
+            "th": "ข้าวขาหมู"
+          },
+          "image": "assets/food_19.png"
+        },
+        {
+          "id": "khao-soi-northern-thai-coconut-c",
+          "label": {
+            "en": "Khao Soi (Northern Thai Coconut Curry Noodle Soup)",
+            "th": "ข้าวซอย"
+          },
+          "image": "assets/food_20.png"
+        },
+        {
+          "id": "tom-yum-goong-spicy-and-sour-shr",
+          "label": {
+            "en": "Tom Yum Goong (Spicy and Sour Shrimp Soup)",
+            "th": "ต้มยำกุ้ง"
+          },
+          "image": "assets/food_21.png"
+        },
+        {
+          "id": "tom-kha-gai-chicken-coconut-soup",
+          "label": {
+            "en": "Tom Kha Gai (Chicken Coconut Soup)",
+            "th": "ต้มข่าไก่"
+          },
+          "image": "assets/food_22.png"
+        },
+        {
+          "id": "som-tum-green-papaya-salad",
+          "label": {
+            "en": "Som Tum (Green Papaya Salad)",
+            "th": "สลัดป๋อมทำ"
+          },
+          "image": "assets/food_23.png"
+        },
+        {
+          "id": "larb-minced-meat-salad",
+          "label": {
+            "en": "Larb (Minced Meat Salad)",
+            "th": "ลาบ"
+          },
+          "image": "assets/food_24.png"
+        },
+        {
+          "id": "nam-tok-moo-grilled-pork-salad",
+          "label": {
+            "en": "Nam Tok Moo (Grilled Pork Salad)",
+            "th": "น้ำตกหมู"
+          },
+          "image": "assets/food_25.png"
+        },
+        {
+          "id": "yum-woon-sen-glass-noodle-salad",
+          "label": {
+            "en": "Yum Woon Sen (Glass Noodle Salad)",
+            "th": "ยำวุ้นเส้น"
+          },
+          "image": "assets/food_26.png"
+        },
+        {
+          "id": "poh-pia-tod-spring-rolls",
+          "label": {
+            "en": "Poh Pia Tod (Spring Rolls)",
+            "th": "ปอ เปี๊ยะทอด"
+          },
+          "image": "assets/food_27.png"
+        },
+        {
+          "id": "khao-niao-mamuang-mango-sticky-r",
+          "label": {
+            "en": "Khao Niao Mamuang (Mango Sticky Rice)",
+            "th": "ข้าวเหียวมะม่วง"
+          },
+          "image": "assets/food_28.png"
+        },
+        {
+          "id": "roti-gluay-banana-roti",
+          "label": {
+            "en": "Roti Gluay (Banana Roti)",
+            "th": "โรตีกล้วย"
+          },
+          "image": "assets/food_29.png"
+        },
+        {
+          "id": "steak",
+          "label": {
+            "en": "Steak",
+            "th": "สเต็ก"
+          },
+          "image": "assets/food_30.png"
+        },
+        {
+          "id": "hamburger",
+          "label": {
+            "en": "Hamburger",
+            "th": "แฮมเบอร์เกอร์"
+          },
+          "image": "assets/food_31.png"
+        },
+        {
+          "id": "pizza",
+          "label": {
+            "en": "Pizza",
+            "th": "พิซซ่า"
+          },
+          "image": "assets/food_32.png"
+        },
+        {
+          "id": "french-fries",
+          "label": {
+            "en": "French Fries",
+            "th": "เฟรนช์ฟรายส์"
+          },
+          "image": "assets/food_33.png"
+        }
+      ]
+    },
+    {
+      "id": "feeling",
+      "type": "list",
+      "title": {
+        "en": "Feeling",
+        "th": "ความรู้สึก"
+      },
+      "description": {
+        "en": "Describe current mood and emotion.",
+        "th": "บอกความรู้สึกของคุณ"
+      },
+      "page_title": {
+        "en": "Feeling & Mood",
+        "th": "ความรู้สึกและอารมณ์"
+      },
+      "color": "#F9E79F",
+      "accent": "#F9E79F",
+      "image": "assets/feeling.png",
+      "visible": true,
+      "speak": true,
+      "speak_template": {
+        "en": "I feel {lower}",
+        "th": "ฉันรู้สึก {text}"
+      },
+      "large_text": true,
+      "items": [
+        {
+          "id": "excited",
+          "label": {
+            "en": "Excited",
+            "th": "ตื่นเต้น"
+          },
+          "image": "assets/feeling_0.png"
+        },
+        {
+          "id": "confident",
+          "label": {
+            "en": "Confident",
+            "th": "มั่นใจ"
+          },
+          "image": "assets/feeling_1.png"
+        },
+        {
+          "id": "loved",
+          "label": {
+            "en": "Loved",
+            "th": "รู้สึกถูกรัก"
+          },
+          "image": "assets/feeling_2.png"
+        },
+        {
+          "id": "relieved",
+          "label": {
+            "en": "Relieved",
+            "th": "โล่งใจ"
+          },
+          "image": "assets/feeling_3.png"
+        },
+        {
+          "id": "relaxed",
+          "label": {
+            "en": "Relaxed",
+            "th": "ผ่อนคลาย"
+          },
+          "image": "assets/feeling_4.png"
+        },
+        {
+          "id": "curious",
+          "label": {
+            "en": "Curious",
+            "th": "อยากรู้"
+          },
+          "image": "assets/feeling_5.png"
+        },
+        {
+          "id": "sad",
+          "label": {
+            "en": "Sad",
+            "th": "เศร้า"
+          },
+          "image": "assets/feeling_6.png"
+        },
+        {
+          "id": "lonely",
+          "label": {
+            "en": "Lonely",
+            "th": "เหงา"
+          },
+          "image": "assets/feeling_7.png"
+        },
+        {
+          "id": "disappointed",
+          "label": {
+            "en": "Disappointed",
+            "th": "ผิดหวัง"
+          },
+          "image": "assets/feeling_8.png"
+        },
+        {
+          "id": "hurt",
+          "label": {
+            "en": "Hurt",
+            "th": "เจ็บปวด"
+          },
+          "image": "assets/feeling_9.png"
+        },
+        {
+          "id": "nostalgic",
+          "label": {
+            "en": "Nostalgic",
+            "th": "คิดถึงวันเก่า ๆ"
+          },
+          "image": "assets/feeling_10.png"
+        },
+        {
+          "id": "embarrassed",
+          "label": {
+            "en": "Embarrassed",
+            "th": "อาย"
+          },
+          "image": "assets/feeling_11.png"
+        },
+        {
+          "id": "angry",
+          "label": {
+            "en": "Angry",
+            "th": "โกรธ"
+          },
+          "image": "assets/feeling_12.png"
+        },
+        {
+          "id": "annoyed",
+          "label": {
+            "en": "Annoyed",
+            "th": "หงุดหงิด"
+          },
+          "image": "assets/feeling_13.png"
+        },
+        {
+          "id": "envious",
+          "label": {
+            "en": "Envious",
+            "th": "อิจฉา"
+          },
+          "image": "assets/feeling_14.png"
+        },
+        {
+          "id": "disgusted",
+          "label": {
+            "en": "Disgusted",
+            "th": "ขยะแขยง"
+          },
+          "image": "assets/feeling_15.png"
+        },
+        {
+          "id": "suspicious",
+          "label": {
+            "en": "Suspicious",
+            "th": "ระแวง"
+          },
+          "image": "assets/feeling_16.png"
+        },
+        {
+          "id": "worried",
+          "label": {
+            "en": "Worried",
+            "th": "กังวล"
+          },
+          "image": "assets/feeling_17.png"
+        },
+        {
+          "id": "stressed",
+          "label": {
+            "en": "Stressed",
+            "th": "เครียด"
+          },
+          "image": "assets/feeling_18.png"
+        },
+        {
+          "id": "shocked",
+          "label": {
+            "en": "Shocked",
+            "th": "ตกใจ"
+          },
+          "image": "assets/feeling_19.png"
+        },
+        {
+          "id": "bored",
+          "label": {
+            "en": "Bored",
+            "th": "เบื่อ"
+          },
+          "image": "assets/feeling_20.png"
+        },
+        {
+          "id": "hungry",
+          "label": {
+            "en": "Hungry",
+            "th": "หิว"
+          },
+          "image": "assets/feeling_21.png"
+        }
+      ]
+    },
+    {
+      "id": "position",
+      "type": "list",
+      "title": {
+        "en": "Position & Comfort",
+        "th": "ตำแหน่งและความสะดวก"
+      },
+      "description": {
+        "en": "Adjust my bed or change my position.",
+        "th": "ปรับเตียงหรือเปลี่ยนท่าทางให้หน่อย"
+      },
+      "page_title": {
+        "en": "Position & Comfort",
+        "th": "ตำแหน่งและความสะดวก"
+      },
+      "color": "#D6EAF8",
+      "accent": "#D6EAF8",
+      "image": "assets/position.png",
+      "visible": true,
+      "speak": true,
+      "speak_template": {
+        "en": "",
+        "th": ""
+      },
+      "large_text": true,
+      "items": [
+        {
+          "id": "adjust-bed",
+          "label": {
+            "en": "Adjust Bed",
+            "th": "ปรับเตียง"
+          },
+          "image": "assets/position_0.png"
+        },
+        {
+          "id": "pull-me-up",
+          "label": {
+            "en": "Pull Me Up",
+            "th": "ช่วยดึงตัวฉันขึ้น"
+          },
+          "image": "assets/position_1.png"
+        },
+        {
+          "id": "support-right-arm",
+          "label": {
+            "en": "Support Right Arm",
+            "th": "พยุงแขนขวา"
+          },
+          "image": "assets/position_2.png"
+        },
+        {
+          "id": "turn-me-to-my-side",
+          "label": {
+            "en": "Turn Me to My Side",
+            "th": "ช่วยพลิกฉันตะแคง"
+          },
+          "image": "assets/position_3.png"
+        },
+        {
+          "id": "fix-pillows-cushions",
+          "label": {
+            "en": "Fix Pillows/Cushions",
+            "th": "จัดหมอน/เบาะให้หน่อย"
+          },
+          "image": "assets/position_4.png"
+        },
+        {
+          "id": "too-hot-too-cold",
+          "label": {
+            "en": "Too Hot / Too Cold",
+            "th": "ร้อนเกินไป / หนาวเกินไป"
+          },
+          "image": "assets/position_5.png"
+        },
+        {
+          "id": "transfer-to-wheelchair",
+          "label": {
+            "en": "Transfer to Wheelchair",
+            "th": "ช่วยย้ายไปวีลแชร์"
+          },
+          "image": "assets/position_6.png"
+        },
+        {
+          "id": "transfer-to-bed",
+          "label": {
+            "en": "Transfer to Bed",
+            "th": "ช่วยย้ายกลับเตียง"
+          },
+          "image": "assets/position_7.png"
+        },
+        {
+          "id": "transfer-to-commode-toilet",
+          "label": {
+            "en": "Transfer to Commode/Toilet",
+            "th": "ช่วยย้ายไปเก้าอี้นั่งถ่าย/ห้องน้ำ"
+          },
+          "image": "assets/position_8.png"
+        },
+        {
+          "id": "move-to-recliner",
+          "label": {
+            "en": "Move to Recliner",
+            "th": "ช่วยย้ายไปเก้าอี้เอนนอน"
+          },
+          "image": "assets/position_9.png"
+        }
+      ]
+    },
+    {
+      "id": "bathroom",
+      "type": "grid",
+      "title": {
+        "en": "Bathroom",
+        "th": "ห้องน้ำ"
+      },
+      "description": {
+        "en": "Request bathroom assistance.",
+        "th": "ขอความช่วยเหลือห้องน้ำ"
+      },
+      "page_title": {
+        "en": "Bathroom Assistance",
+        "th": "ความช่วยเหลือห้องน้ำ"
+      },
+      "color": "#D1F2EB",
+      "accent": "#D1F2EB",
+      "image": "assets/bathroom.png",
+      "visible": true,
+      "speak": true,
+      "speak_template": {
+        "en": "",
+        "th": ""
+      },
+      "large_text": false,
+      "items": [
+        {
+          "id": "toilet",
+          "label": {
+            "en": "Toilet",
+            "th": "เข้าห้องน้ำ"
+          },
+          "image": "assets/toilet_pic.png",
+          "message": {
+            "en": "I need to use the toilet.",
+            "th": "ฉันต้องการเข้าห้องน้ำ"
+          },
+          "color": "#AED6F1"
+        },
+        {
+          "id": "shower",
+          "label": {
+            "en": "Shower",
+            "th": "อาบน้ำ"
+          },
+          "image": "assets/shower_pic.png",
+          "message": {
+            "en": "I would like to take a shower.",
+            "th": "ฉันต้องการอาบน้ำ"
+          },
+          "color": "#A2D9CE"
+        },
+        {
+          "id": "wash",
+          "label": {
+            "en": "Wash",
+            "th": "ล้างหน้า/ล้างมือ"
+          },
+          "image": "assets/wash_pic.png",
+          "message": {
+            "en": "I need to wash my hands/face.",
+            "th": "ฉันต้องการล้างหน้าและมือ"
+          },
+          "color": "#F9E79F"
+        },
+        {
+          "id": "clothes",
+          "label": {
+            "en": "Clothes",
+            "th": "เปลี่ยนเสื้อผ้า"
+          },
+          "image": "assets/clothes_pic.png",
+          "message": {
+            "en": "I need help changing clothes.",
+            "th": "ฉันต้องการเปลี่ยนเสื้อผ้า"
+          },
+          "color": "#D7BDE2"
+        },
+        {
+          "id": "diaper",
+          "label": {
+            "en": "Diaper",
+            "th": "เปลี่ยนผ้าอ้อม"
+          },
+          "image": "assets/diaper_pic.png",
+          "message": {
+            "en": "I need to change the diaper.",
+            "th": "ฉันต้องการเปลี่ยนผ้าอ้อม"
+          },
+          "color": "#F5B7B1"
+        },
+        {
+          "id": "grooming",
+          "label": {
+            "en": "Grooming",
+            "th": "จัดแต่งทรงผม"
+          },
+          "image": "assets/grooming_pic.png",
+          "message": {
+            "en": "I need help with hair or shaving.",
+            "th": "ฉันต้องการความช่วยเหลือเรื่องทรงผมหรือโกนหนวด"
+          },
+          "color": "#FAD7A1"
+        }
+      ]
+    },
+    {
+      "id": "yesno",
+      "type": "yesno",
+      "title": {
+        "en": "YES / NO",
+        "th": "ใช่ / ไม่ใช่"
+      },
+      "description": {
+        "en": "Confirmatory responses for staff.",
+        "th": "ตอบตกลงหรือปฏิเสธ"
+      },
+      "page_title": {
+        "en": "Choose Answer",
+        "th": "เลือกคำตอบ"
+      },
+      "color": "#FADBD8",
+      "accent": "#D5F5E3",
+      "image": "assets/yes_no.png",
+      "visible": true,
+      "speak": true,
+      "speak_template": {
+        "en": "",
+        "th": ""
+      },
+      "large_text": false,
+      "items": []
+    },
+    {
+      "id": "entertainment",
+      "type": "list",
+      "title": {
+        "en": "Entertainment",
+        "th": "ความบันเทิง"
+      },
+      "description": {
+        "en": "Request leisure activity or TV.",
+        "th": "ขอความบันเทิง"
+      },
+      "page_title": {
+        "en": "Entertainment",
+        "th": "ความบันเทิง"
+      },
+      "color": "#D5F5E3",
+      "accent": "#D5F5E3",
+      "image": "assets/entertainment.png",
+      "visible": true,
+      "speak": false,
+      "speak_template": {
+        "en": "",
+        "th": ""
+      },
+      "large_text": false,
+      "items": [
+        {
+          "id": "espn",
+          "label": {
+            "en": "ESPN",
+            "th": "ESPN"
+          },
+          "image": "assets/entertainment_0.png"
+        },
+        {
+          "id": "espn2",
+          "label": {
+            "en": "ESPN2",
+            "th": "ESPN2"
+          },
+          "image": "assets/entertainment_1.png"
+        },
+        {
+          "id": "fox-sports",
+          "label": {
+            "en": "FOX Sports",
+            "th": "FOX Sports"
+          },
+          "image": "assets/entertainment_2.png"
+        },
+        {
+          "id": "nbc-sports",
+          "label": {
+            "en": "NBC Sports",
+            "th": "NBC Sports"
+          },
+          "image": "assets/entertainment_3.png"
+        },
+        {
+          "id": "cbs-sports",
+          "label": {
+            "en": "CBS Sports",
+            "th": "CBS Sports"
+          },
+          "image": "assets/entertainment_4.png"
+        },
+        {
+          "id": "tnt-sports",
+          "label": {
+            "en": "TNT Sports",
+            "th": "TNT Sports"
+          },
+          "image": "assets/entertainment_5.png"
+        },
+        {
+          "id": "peacock",
+          "label": {
+            "en": "Peacock",
+            "th": "Peacock"
+          },
+          "image": "assets/entertainment_6.png"
+        },
+        {
+          "id": "bein-sports",
+          "label": {
+            "en": "beIN Sports",
+            "th": "beIN Sports"
+          },
+          "image": "assets/entertainment_7.png"
+        },
+        {
+          "id": "netflix",
+          "label": {
+            "en": "Netflix",
+            "th": "Netflix"
+          },
+          "image": "assets/entertainment_8.png"
+        },
+        {
+          "id": "hbo",
+          "label": {
+            "en": "HBO",
+            "th": "HBO"
+          },
+          "image": "assets/entertainment_9.png"
+        },
+        {
+          "id": "disney",
+          "label": {
+            "en": "Disney+",
+            "th": "Disney+"
+          },
+          "image": "assets/entertainment_10.png"
+        },
+        {
+          "id": "abc",
+          "label": {
+            "en": "ABC",
+            "th": "ABC"
+          },
+          "image": "assets/entertainment_11.png"
+        },
+        {
+          "id": "bbc",
+          "label": {
+            "en": "BBC",
+            "th": "BBC"
+          },
+          "image": "assets/entertainment_12.png"
+        },
+        {
+          "id": "national-geographic",
+          "label": {
+            "en": "National Geographic",
+            "th": "National Geographic"
+          },
+          "image": "assets/entertainment_13.png"
+        },
+        {
+          "id": "history-channel",
+          "label": {
+            "en": "History Channel",
+            "th": "History Channel"
+          },
+          "image": "assets/entertainment_14.png"
+        },
+        {
+          "id": "cnn",
+          "label": {
+            "en": "CNN",
+            "th": "CNN"
+          },
+          "image": "assets/entertainment_15.png"
+        },
+        {
+          "id": "channel-3-ch3",
+          "label": {
+            "en": "Channel 3 (Ch3)",
+            "th": "Channel 3 (Ch3)"
+          },
+          "image": "assets/entertainment_16.png"
+        },
+        {
+          "id": "channel-7-ch7",
+          "label": {
+            "en": "Channel 7 (Ch7)",
+            "th": "Channel 7 (Ch7)"
+          },
+          "image": "assets/entertainment_17.png"
+        },
+        {
+          "id": "one-31",
+          "label": {
+            "en": "ONE 31",
+            "th": "ONE 31"
+          },
+          "image": "assets/entertainment_18.png"
+        },
+        {
+          "id": "amarin-tv",
+          "label": {
+            "en": "Amarin TV",
+            "th": "Amarin TV"
+          },
+          "image": "assets/entertainment_19.png"
+        },
+        {
+          "id": "youtube",
+          "label": {
+            "en": "YouTube",
+            "th": "YouTube"
+          },
+          "image": "assets/entertainment_20.png"
+        },
+        {
+          "id": "facebook",
+          "label": {
+            "en": "Facebook",
+            "th": "Facebook"
+          },
+          "image": "assets/entertainment_21.png"
+        }
+      ]
+    },
+    {
+      "id": "recommend",
+      "type": "phrases",
+      "title": {
+        "en": "Recommend Answer",
+        "th": "แนะนำคำตอบ"
+      },
+      "description": {
+        "en": "Suggestion from staff or system.",
+        "th": "แนะนำโดยระบบ"
+      },
+      "page_title": {
+        "en": "Recommendations",
+        "th": "คำแนะนำ"
+      },
+      "color": "#FCF3CF",
+      "accent": "#FCF3CF",
+      "image": "assets/recommend.png",
+      "visible": true,
+      "speak": true,
+      "speak_template": {
+        "en": "",
+        "th": ""
+      },
+      "large_text": true,
+      "items": [
+        {
+          "id": "i-need-my-glasses",
+          "label": {
+            "en": "I need my glasses",
+            "th": "ฉันต้องการแว่นตาของฉัน"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-my-hearing-aid",
+          "label": {
+            "en": "I need my hearing aid",
+            "th": "ฉันต้องการเครื่องช่วยฟัง"
+          },
+          "image": ""
+        },
+        {
+          "id": "my-phone-needs-charging",
+          "label": {
+            "en": "My phone needs charging",
+            "th": "โทรศัพท์ของฉันต้องชาร์จ"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-dropped-something",
+          "label": {
+            "en": "I dropped something",
+            "th": "ฉันทำสิ่งของตกแล้ว"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-more-light",
+          "label": {
+            "en": "I need more light",
+            "th": "ฉันต้องการแสงสว่างมากขึ้น"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-less-light",
+          "label": {
+            "en": "I need less light",
+            "th": "ฉันต้องการแสงสว่างน้อยลง"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-turn-off-the-tv",
+          "label": {
+            "en": "Please turn off the TV",
+            "th": "โปรดปิดทีวี"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-turn-on-the-fan",
+          "label": {
+            "en": "Please turn on the fan",
+            "th": "โปรดเปิดพัดลม"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-turn-off-the-fan",
+          "label": {
+            "en": "Please turn off the fan",
+            "th": "โปรดปิดพัดลม"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-hand-sanitizer",
+          "label": {
+            "en": "I need hand sanitizer",
+            "th": "ฉันต้องการแอลกอฮอล์เจล"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-tissues",
+          "label": {
+            "en": "I need tissues",
+            "th": "ฉันต้องการกระดาษทิชชู่"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-lip-balm",
+          "label": {
+            "en": "I need lip balm",
+            "th": "ฉันต้องการบำรุงริมฝีปาก"
+          },
+          "image": ""
+        },
+        {
+          "id": "my-mouth-is-dry",
+          "label": {
+            "en": "My mouth is dry",
+            "th": "ปากฉันแห้ง"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-to-spit",
+          "label": {
+            "en": "I need to spit",
+            "th": "ฉันตองการปฐเพ่"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-clean-my-hands",
+          "label": {
+            "en": "Please clean my hands",
+            "th": "โปรดล้างมือฉัน"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-my-dentures",
+          "label": {
+            "en": "I need my dentures",
+            "th": "ฉันต้องการฟันปลอม"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-remove-my-dentures",
+          "label": {
+            "en": "Please remove my dentures",
+            "th": "โปรดถอดฟันปลอมของฉัน"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-want-to-see-my-family",
+          "label": {
+            "en": "I want to see my family",
+            "th": "ฉันต้องการพบครอบครัว"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-want-to-see-my-friend",
+          "label": {
+            "en": "I want to see my friend",
+            "th": "ฉันต้องการพบเพื่อน"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-ask-visitor-to-leave",
+          "label": {
+            "en": "Please ask visitor to leave",
+            "th": "โปรดขออนุญาต"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-want-more-visitors",
+          "label": {
+            "en": "I want more visitors",
+            "th": "ฉันต้องการแขกมากขึ้น"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-take-my-photo",
+          "label": {
+            "en": "Please take my photo",
+            "th": "โปรดถ่ายรูปให้ฉัน"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-contact-my-doctor",
+          "label": {
+            "en": "Please contact my doctor",
+            "th": "โปรดติดต่อแพทย์ของฉัน"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-want-to-speak-to-a-nurse",
+          "label": {
+            "en": "I want to speak to a nurse",
+            "th": "ฉันต้องการพูดคุยกับพยาบาล"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-cannot-sleep",
+          "label": {
+            "en": "I cannot sleep",
+            "th": "ฉันนอนไม่ได้"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-a-sleep-aid",
+          "label": {
+            "en": "I need a sleep aid",
+            "th": "ฉันต้องการยาช่วยนอน"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-be-quiet",
+          "label": {
+            "en": "Please be quiet",
+            "th": "โปรดเงียบเสียง"
+          },
+          "image": ""
+        },
+        {
+          "id": "the-light-is-bothering-me",
+          "label": {
+            "en": "The light is bothering me",
+            "th": "แสงสว่างรบกวนฉัน"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-want-to-nap",
+          "label": {
+            "en": "I want to nap",
+            "th": "ฉันต้องการหลับพักผ่อน"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-feel-well-rested",
+          "label": {
+            "en": "I feel well rested",
+            "th": "ฉันรู้สึกผ่อนคลายแล้ว"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-had-a-bad-dream",
+          "label": {
+            "en": "I had a bad dream",
+            "th": "ฉันฝันร้าย"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-my-night-medication",
+          "label": {
+            "en": "I need my night medication",
+            "th": "ฉันต้องการยาน้ำยากลางคืน"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-speak-slowly",
+          "label": {
+            "en": "Please speak slowly",
+            "th": "โปรดพูดช้าๆ"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-repeat-that",
+          "label": {
+            "en": "Please repeat that",
+            "th": "โปรดพูดซ้ำ"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-do-not-understand",
+          "label": {
+            "en": "I do not understand",
+            "th": "ฉันไม่เข้าใจ"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-call-my-family",
+          "label": {
+            "en": "Please call my family",
+            "th": "โปรดโทรศัพท์ครอบครัว"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-a-pen-and-paper",
+          "label": {
+            "en": "I need a pen and paper",
+            "th": "ฉันต้องการปากกาและกระดาษ"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-write-it-down",
+          "label": {
+            "en": "Please write it down",
+            "th": "โปรดเขียนลงมา"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-show-me-a-picture",
+          "label": {
+            "en": "Please show me a picture",
+            "th": "โปรดแสดงรูปให้ฉันดู"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-want-to-make-a-phone-call",
+          "label": {
+            "en": "I want to make a phone call",
+            "th": "ฉันต้องการโทรศัพท์"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-want-to-send-a-message",
+          "label": {
+            "en": "I want to send a message",
+            "th": "ฉันต้องการส่งข้อความ"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-read-this-to-me",
+          "label": {
+            "en": "Please read this to me",
+            "th": "โปรดอ่านให้ฉันฟัง"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-an-interpreter",
+          "label": {
+            "en": "I need an interpreter",
+            "th": "ฉันต้องการล่ามแปล"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-be-patient-with-me",
+          "label": {
+            "en": "Please be patient with me",
+            "th": "โปรดอดทนกับฉันหน่อย"
+          },
+          "image": ""
+        },
+        {
+          "id": "my-bed-is-uncomfortable",
+          "label": {
+            "en": "My bed is uncomfortable",
+            "th": "เตียงของฉันไม่สะดวก"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-my-blanket",
+          "label": {
+            "en": "I need my blanket",
+            "th": "ฉันต้องการผ้าห่ม"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-raise-my-bed",
+          "label": {
+            "en": "Please raise my bed",
+            "th": "โปรดยกเตียงให้สูงขึ้น"
+          },
+          "image": ""
+        },
+        {
+          "id": "please-lower-my-bed",
+          "label": {
+            "en": "Please lower my bed",
+            "th": "โปรดลดเตียงให้ต่ำลง"
+          },
+          "image": ""
+        },
+        {
+          "id": "i-need-more-pillows",
+          "label": {
+            "en": "I need more pillows",
+            "th": "ฉันต้องการหมอนเพิ่มขึ้น"
+          },
+          "image": ""
+        }
+      ]
+    },
+    {
+      "id": "clock",
+      "type": "clock",
+      "title": {
+        "en": "Clock",
+        "th": "นาฬิกา"
+      },
+      "description": {
+        "en": "Check the time or daily schedule.",
+        "th": "เช็คเวลาหรือตาราง"
+      },
+      "page_title": {
+        "en": "Clock Settings",
+        "th": "ตั้งค่าเวลา"
+      },
+      "color": "#E8DAEF",
+      "accent": "#FAD7A1",
+      "image": "assets/clock.png",
+      "visible": true,
+      "speak": false,
+      "speak_template": {
+        "en": "",
+        "th": ""
+      },
+      "large_text": false,
+      "items": []
+    }
+  ]
+}

@@ -22,10 +22,12 @@ export const TEAM_PHOTO_CAPTION = "The OmniVox team";
 export const TEAM: Person[] = [
   { name: "Thinh Ha", role: "Back-end Developer", email: "tgh26@fsu.edu", github: "HGTNewCoder",
     linkedin: "https://www.linkedin.com/in/hgtnewcoder/" },
-  { name: "Kha Hoang", role: "Front-end Developer", email: "mkha4622@gmail.com", github: "khaminh4622" },
+  { name: "Kha Hoang", role: "Front-end Developer", email: "mkha4622@gmail.com", github: "khaminh4622",
+    linkedin: "https://www.linkedin.com/in/kha-hoang-b60892337/" },
   { name: "Long Pham", role: "Electrical Engineer", email: "longmadridista10@gmail.com",
     linkedin: "https://www.linkedin.com/in/long-pham-a59170360" },
-  { name: "Duong Le", role: "Patient Liaison", email: "thaiduongle2008@gmail.com" },
+  { name: "Duong Le", role: "Patient Liaison", email: "thaiduongle2008@gmail.com",
+    linkedin: "https://www.linkedin.com/in/thai-duong-le-485956438/" },
 ];
 
 export const THANKS: Thanks[] = [
